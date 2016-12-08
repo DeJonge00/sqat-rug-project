@@ -35,15 +35,22 @@ Bonus
 
 */
 
-set[Declaration] jpacmanASTs() = createAstsFromEclipseProject(|project://jpacman|, true); 
+int complexity(Declaration d) {
+	int c = 0;
+	return c;
+}
+
+set[Declaration] jpacmanASTs() = createAstsFromEclipseProject(|project://jpacman-framework|, true); 
 
 alias CC = rel[loc method, int cc];
 
-CC cc(set[Declaration] decls) {
+CC cc(/*set[Declaration] decls*/) {
   CC result = {};
-  
-  // to be done
-  
+  int i = 0, tc = 0;
+  for(Declaration d <- jpacmanASTs()) {
+  		tc += getcomplexity(d);
+  }
+  println(i);
   return result;
 }
 
