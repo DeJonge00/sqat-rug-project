@@ -32,12 +32,69 @@ Bonus:
 
 */
 
+bool isComment(str s) {
+	return ( /^\s*\/\/.*$/ := s);
+}
+
+bool isWhite(str s) {
+	return (/^\s*$/ := s);
+}
+
+int isStartOfComment(str s) {
+	if (/^\s*\/\*.*$/ := s) {
+		return 1;
+	}
+	if (/^.*\/\*.*$/ := s) {
+		return 2;
+	}
+	return 0;
+}
+
+int isEndOfComment(str s) {
+	if (/^.*\*\/\s*$/ := s) {
+		return 1;
+	}
+	if (/^.*\*\/.*$/ := s) {
+		return 2;
+	}
+	return 0;
+}
+
 alias SLOC = map[loc file, int sloc];
 
 SLOC sloc(loc project) {
-  SLOC result = ();
-  
-  // to be done
-  
-  return result;
+	SLOC result = ();
+	set[loc] projectFiles = files(project);
+	
+	for (loc file <- projectFiles) {
+		if(file.extension=="java"){
+			int n=0;
+			bool inComment=false;
+			list[str] code = readFileLines(file);
+			for(str s <- code) {
+				if (!(isComment(s) || isWhite(s))) {
+					if (inComment) {
+						int end = isEndOfComment(s);
+						if (end==1) {
+							inComment=false;
+						} else if (end==2) {
+							inComment=false;
+							n++;
+						}
+					} else {
+						int \start = isStartOfComment(s);
+						if (\start==1) {
+							inComment=true;
+						} else if (\start==2) {
+							inComment=true;
+							n++;
+						} else {
+							n++;
+						}
+					}
+				}
+			}
+		}
+	}
+	return result;
 }
