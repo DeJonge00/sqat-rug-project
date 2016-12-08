@@ -2,6 +2,7 @@ module sqat::series1::A1_SLOC
 
 import IO;
 import util::FileSystem;
+import String;
 
 /* 
 
@@ -15,10 +16,10 @@ Tips
 - use the functions in IO to read source files
 
 Answer the following questions:
-- what is the biggest file in JPacman?
-- what is the total size of JPacman?
-- is JPacman large according to SIG maintainability?
-- what is the ratio between actual code and test code size?
+- what is the biggest file in JPacman? jpacman/level/Level.java with 179 lines
+- what is the total size of JPacman? 2645
+- is JPacman large according to SIG maintainability? No, it is ranked ++ (very small) according to SIG, because it is less than 66000 loc
+- what is the ratio between actual code and test code size? 3.60
 
 Sanity checks:
 - write tests to ensure you are correctly skipping multi-line comments
@@ -65,9 +66,10 @@ alias SLOC = map[loc file, int sloc];
 SLOC sloc(loc project) {
 	SLOC result = ();
 	set[loc] projectFiles = files(project);
+	real totalsloc = 0.0,testloc = 0.0;
 	
 	for (loc file <- projectFiles) {
-		if(file.extension=="java"){
+		if(true){
 			int n=0;
 			bool inComment=false;
 			list[str] code = readFileLines(file);
@@ -79,7 +81,7 @@ SLOC sloc(loc project) {
 							inComment=false;
 						} else if (end==2) {
 							inComment=false;
-							n++;
+							n=n+1;
 						}
 					} else {
 						int \start = isStartOfComment(s);
@@ -87,14 +89,34 @@ SLOC sloc(loc project) {
 							inComment=true;
 						} else if (\start==2) {
 							inComment=true;
-							n++;
+							n=n+1;
 						} else {
-							n++;
+							n=n+1;
 						}
 					}
 				}
 			}
+			result += (file:n);
+			totalsloc += n;
+			if (substring(file.path,5,9)=="test") {
+				testloc += n;
+			}
 		}
 	}
+	print("total lines of code: ");
+	println(totalsloc);
+	print("total lines of test code: ");
+	println(testloc);
+	print("ratio between actual code and test code: ");
+	println((totalsloc-testloc)/testloc);
+	
 	return result;
 }
+
+
+
+/*
+Answers:
+jpacman/level/Level.java|:179
+
+*/
