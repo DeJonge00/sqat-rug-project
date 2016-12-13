@@ -17,9 +17,9 @@ Tips
 
 Answer the following questions:
 - what is the biggest file in JPacman? jpacman/level/Level.java with 179 lines
-- what is the total size of JPacman? 2645
+- what is the total size of JPacman? 2458
 - is JPacman large according to SIG maintainability? No, it is ranked ++ (very small) according to SIG, because it is less than 66000 loc
-- what is the ratio between actual code and test code size? 3.60
+- what is the ratio between actual code and test code size? 3.41
 
 Sanity checks:
 - write tests to ensure you are correctly skipping multi-line comments
@@ -63,13 +63,16 @@ int isEndOfComment(str s) {
 
 alias SLOC = map[loc file, int sloc];
 
+test bool testFileLength()
+	= sloc(/*TODO*/) == /*TODO*/;
+
 SLOC sloc(loc project) {
 	SLOC result = ();
 	set[loc] projectFiles = files(project);
 	real totalsloc = 0.0,testloc = 0.0;
 	
 	for (loc file <- projectFiles) {
-		if(true){
+		if(file.extension == "java"){
 			int n=0;
 			bool inComment=false;
 			list[str] code = readFileLines(file);
