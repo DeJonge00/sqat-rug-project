@@ -17,9 +17,9 @@ Tips
 
 Answer the following questions:
 - what is the biggest file in JPacman? jpacman/level/Level.java with 179 lines
-- what is the total size of JPacman? 2645
+- what is the total size of JPacman? 2458
 - is JPacman large according to SIG maintainability? No, it is ranked ++ (very small) according to SIG, because it is less than 66000 loc
-- what is the ratio between actual code and test code size? 3.60
+- what is the ratio between actual code and test code size? 3.41
 
 Sanity checks:
 - write tests to ensure you are correctly skipping multi-line comments
@@ -69,7 +69,7 @@ SLOC sloc(loc project) {
 	real totalsloc = 0.0,testloc = 0.0;
 	
 	for (loc file <- projectFiles) {
-		if(true){
+		if(file.extension == "java"){
 			int n=0;
 			bool inComment=false;
 			list[str] code = readFileLines(file);
@@ -114,8 +114,40 @@ SLOC sloc(loc project) {
 }
 
 SLOC q() {
-	return sloc(|project://jpacman-framework/src|);
+	SLOC s =  sloc(|project://jpacman-framework/src|);
 }
 
+test bool testFileLength()
+	= sloc(/*TODO*/) == (/*TODO*/);
+	
+// Test isStartOfComment()
+test bool isBeginCommentFalse()
+	= isStartOfComment("\n") == 0;
+	
+test bool isBeginCommentTrue()
+	= isStartOfComment("/*\n") == 1;
 
+test bool isBeginCommentTruePlus()
+	= isStartOfComment("inti=0; /*\n") == 2;
+	
+// Test isEndOfComment()
+test bool isEndCommentFalse()
+	= isEndOfComment("\n") == 0;
+
+test bool isEndCommentTrue()
+	= isEndOfComment("*/\n") == 1;
+
+test bool isEndCommentTruePlus()
+	= isEndOfComment("*/ x == 2;\n") == 2;
+
+// Test isComment()
+test bool isCommentFalse()
+	= isComment("\n") == 0;
+	
+test bool isCommentTrue()
+	= isComment("   //comment\n") == 1;
+	
+// Test isWhite()
+test bool isCommentFalse()
+	= isComment("\n") == 0;
 
