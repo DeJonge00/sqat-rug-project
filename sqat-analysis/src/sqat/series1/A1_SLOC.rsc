@@ -63,9 +63,6 @@ int isEndOfComment(str s) {
 
 alias SLOC = map[loc file, int sloc];
 
-test bool testFileLength()
-	= sloc(/*TODO*/) == /*TODO*/;
-
 SLOC sloc(loc project) {
 	SLOC result = ();
 	set[loc] projectFiles = files(project);
@@ -116,6 +113,8 @@ SLOC sloc(loc project) {
 	return result;
 }
 
+test bool testFileLength()
+	= sloc(/*TODO*/) == (/*TODO*/);
 
 
 /*

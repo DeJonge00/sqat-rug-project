@@ -41,11 +41,62 @@ Bonus:
 
 */
 
+void checkConstantName(loc file,regexp pattern,bool applyToPublic,
+					   bool applyToProtected, bool applyToPackage, bool applyToPrivate) {
+	list[str] code = readFileLines(file);
+	for(str s <- code) {
+		if (applyToProtected) {
+			if (regexp := s)
+		}
+	}
+}
+
+/* Checks whether a file of the specified extension is at most the specified length */
+void checkFileLength(loc file,int maxLength,list[str] extensions) {
+	if(indexOf(extensions,file.extension) == -1){
+		return;
+	}
+	list[str] code = readFileLines(file);
+	if (size(code)>maxLength) {
+		println(file.path+": This file is too long!")
+	}
+}
+
+void checkIllegalCatch(loc file,list[str] exceptions) {
+	if(file.extension != "java"){
+		return;
+	}
+	int lineNum = 0;
+	list[str] code = readFileLines(file);
+	for(str s <- code) {
+		lineNum+=1;
+		for (str ex)
+		if (/.*catch.*\(.*<ex>.*\).*$/ := s) {
+			println(file.path+" "+lineNum+": Illegal Catch: "+ex);
+		}
+	}
+}
+
+void check4(list[str] code) {
+	if(file.extension != "java"){
+		return;
+	}
+	int lineNum = 0;
+	list[str] code = readFileLines(file);
+	for(str s <- code) {
+		
+	}
+}
+
 set[Message] checkStyle(loc project) {
-  set[Message] result = {};
+ 	set[Message] result = {};
+
+ 	for (loc file <- projectFiles) {
+		check1(code);
+		check2(code);
+		check3(code);
+		check4(code);
+	}
   
-  // to be done
-  // implement each check in a separate function called here. 
-  
-  return result;
+	return result;
 }
