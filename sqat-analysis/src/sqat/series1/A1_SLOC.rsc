@@ -113,10 +113,9 @@ SLOC sloc(loc project) {
 	return result;
 }
 
+SLOC q() {
+	return sloc(|project://jpacman-framework/src|);
+}
 
 
-/*
-Answers:
-jpacman/level/Level.java|:179
 
-*/

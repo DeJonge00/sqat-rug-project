@@ -35,9 +35,9 @@ Bonus
 
 */
 
-int complexity(Declaration d) {
+int complexity(Statement s) {
 	int c = 0;
-	visit(d) {
+	visit(s) {
 		case x: \if(_,_): 
 			c+=1;
 		case \if(_,_,_): 
@@ -76,7 +76,7 @@ CC cc(set[Declaration] decls) {
   for(Declaration d <- decls){
   	c = 0;
     visit(d){
-      case method: \method(_,_,_,_,_): c+=complexity(method);
+      case method: \method(_,name,_,_,code): c+=complexity(code);
     }
     result += <d@src, c>;
   }
