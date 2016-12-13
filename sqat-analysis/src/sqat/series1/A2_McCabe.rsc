@@ -37,6 +37,32 @@ Bonus
 
 int complexity(Declaration d) {
 	int c = 0;
+	visit(d) {
+		case x: \if(_,_): 
+			c+=1;
+		case \if(_,_,_): 
+			c+=1;
+		case \do(_,_): 
+			c+=1;
+		case \while(_,_): 
+			c+=1;
+		case \for(_,_,_): 
+			c+=1;
+		case \for(_,_,_,_): 
+			c+=1;
+		case foreach(_,_,_): 
+			c+=1;
+		case \case(_): 
+			c+=1;
+		case \catch(_,_): 
+			c+=1;
+		case \conditional(_,_,_): 
+			c+=1;
+		case infix(_,"&&",_): 
+			c+=1;
+		case infix(_,"||",_): 
+			c+=1;
+	}
 	return c;
 }
 
@@ -44,21 +70,35 @@ set[Declaration] jpacmanASTs() = createAstsFromEclipseProject(|project://jpacman
 
 alias CC = rel[loc method, int cc];
 
-CC cc(/*set[Declaration] decls*/) {
+CC cc(set[Declaration] decls) {
   CC result = {};
-  int i = 0, tc = 0;
-  for(Declaration d <- jpacmanASTs()) {
-  		tc += getcomplexity(d);
+  int c;
+  for(Declaration d <- decls){
+  	c = 0;
+    visit(d){
+      case method: \method(_,_,_,_,_): c+=complexity(method);
+    }
+    result += <d@src, c>;
   }
-  println(i);
   return result;
 }
 
 alias CCDist = map[int cc, int freq];
 
 CCDist ccDist(CC cc) {
-  // to be done
+
 }
 
+void q1() {
+	int tc = 0;
+	for(<loc l, int n> <- cc(jpacmanASTs())) {
+		print(l);
+		print(" has complexity: " );
+		println(n);
+		tc+=n;
+	}
+	print("Total complexity: ");
+	println(tc);
+}
 
 
