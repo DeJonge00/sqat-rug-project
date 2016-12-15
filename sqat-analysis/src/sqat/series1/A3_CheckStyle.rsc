@@ -41,18 +41,39 @@ Bonus:
 
 */
 
-void checkConstantName(loc file,regexp pattern,bool applyToPublic,
+/* Validates identifiers for constants. */
+set[Message] checkConstantName(loc file,regexp pattern,bool applyToPublic,
 					   bool applyToProtected, bool applyToPackage, bool applyToPrivate) {
+	if(file.extension != "java"){
+		return;
+	}
 	list[str] code = readFileLines(file);
 	for(str s <- code) {
+		if (applyToPublic) {
+			if (/.*public.*/ := s  && /.*<pattern>.*/ ! := s) {
+				println(file.path+" "+lineNum+": public constant does not satisfy naming convention!");
+			}
+		}
 		if (applyToProtected) {
-			if (regexp := s)
+			if (/.*protected.*/ := s  && /.*<pattern>.*/ ! := s) {
+				println(file.path+" "+lineNum+": protected constant does not satisfy naming convention!");
+			}
+		}
+		if (applyToPackage) {
+			if (/.*package-private.*/ := s  && /.*<pattern>.*/ ! := s) {
+				println(file.path+" "+lineNum+": package-private constant does not satisfy naming convention!");
+			}
+		}
+		if (applyToPrivate) {
+			if (/.*private.*/ := s  && /.*<pattern>.*/ ! := s) {
+				println(file.path+" "+lineNum+": private constant does not satisfy naming convention!");
+			}
 		}
 	}
 }
 
-/* Checks whether a file of the specified extension is at most the specified length */
-void checkFileLength(loc file,int maxLength,list[str] extensions) {
+/* Checks whether a file of the specified extension is at most the specified length. */
+set[Message] checkFileLength(loc file,int maxLength,list[str] extensions) {
 	if(indexOf(extensions,file.extension) == -1){
 		return;
 	}
@@ -62,7 +83,8 @@ void checkFileLength(loc file,int maxLength,list[str] extensions) {
 	}
 }
 
-void checkIllegalCatch(loc file,list[str] exceptions) {
+/* Checks that certain exception types do not appear in a catch statement. */
+set[Message] checkIllegalCatch(loc file,list[str] exceptions) {
 	if(file.extension != "java"){
 		return;
 	}
@@ -77,7 +99,8 @@ void checkIllegalCatch(loc file,list[str] exceptions) {
 	}
 }
 
-void check4(list[str] code) {
+/* TODO: personal style check */
+set[Message] check4(list[str] code) {
 	if(file.extension != "java"){
 		return;
 	}
@@ -92,10 +115,10 @@ set[Message] checkStyle(loc project) {
  	set[Message] result = {};
 
  	for (loc file <- projectFiles) {
-		check1(code);
-		check2(code);
-		check3(code);
-		check4(code);
+		checkConstantName(file);
+		checkFileLength(file);
+		checkIllegalCatch(file);
+		check4(file);
 	}
   
 	return result;
