@@ -119,7 +119,7 @@ SLOC q() {
 
 test bool testFileLength()
 	= sloc(|project://sqat-test-project/src/series1_numberOfLines|)
-	== (|project://sqat-test-project/src/series1_numberOfLines/NumberOfLines.java|:3);
+	== (|project://sqat-test-project/src/series1_numberOfLines/NumberOfLines1.java|:3);
 	
 // Test isStartOfComment()
 test bool isBeginCommentFalse()
@@ -143,12 +143,14 @@ test bool isEndCommentTruePlus()
 
 // Test isComment()
 test bool isCommentFalse()
-	= isComment("\n") == 0;
+	= isComment("\n") == false;
 	
 test bool isCommentTrue()
-	= isComment("   //comment\n") == 1;
+	= isComment("   //comment\n") == true;
 	
 // Test isWhite()
-test bool isCommentFalse()
-	= isComment("\n") == 0;
+test bool isWhiteFalse()
+	= isWhite("   c  \n") == false;
 
+test bool isWhiteTrue()
+	= isWhite("    \n") == true;

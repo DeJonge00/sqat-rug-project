@@ -35,6 +35,10 @@ Bonus
 
 */
 
+set[Declaration] jpacmanASTs() = createAstsFromEclipseProject(|project://jpacman-framework|, true); 
+
+alias CC = rel[loc method, int cc];
+
 int complexity(Statement s) {
 	int c = 0;
 	visit(s) {
@@ -66,20 +70,19 @@ int complexity(Statement s) {
 	return c;
 }
 
-set[Declaration] jpacmanASTs() = createAstsFromEclipseProject(|project://jpacman-framework|, true); 
-
-alias CC = rel[loc method, int cc];
+CC declarationComplexity(Declaration f) {
+	CC result = {};
+    visit(f){
+      case method: \method(_,_,_,_,code): result += <method@src, 1 + complexity(code)>;
+    }
+    return result;
+}
 
 CC cc(set[Declaration] decls) {
   CC result = {};
-  int c;
-  for(Declaration d <- decls){
-  	c = 0;
-    visit(d){
-      case method: \method(_,name,_,_,code): c+=complexity(code);
-    }
-    result += <d@src, c>;
-  }
+  for (Declaration d <- decls) {
+		result += declarationComplexity(d);
+	}  
   return result;
 }
 
@@ -89,22 +92,33 @@ CCDist ccDist(CC cc) {
 
 }
 
-void q1() {
+void q() {
 	int tc = 0;
+	int max = 0;
+	loc maxfile;
 	for(<loc l, int n> <- cc(jpacmanASTs())) {
 		print(l);
 		print(" has complexity: " );
 		println(n);
+		if(n > max) {
+			max = n;
+			maxfile = l;
+		}
 		tc+=n;
 	}
 	print("Total complexity: ");
 	println(tc);
+	print("Method with highest complexity is in: ");
+	print(maxfile);
+	print(" with complexity: ");
+	println(max);
 }
 
 // --- TESTING ---
 // Test complexity()
 test bool testFileLength()
-	= complexity(/*TODO*/) == (/*TODO*/);
+	= declarationComplexity(createAstsFromEclipseProject(|project://sqat-test-project/src/series1_numberOfLines/NumberOfLines1.java|)) 
+	== {<|project://sqat-test-project/src/series1_numberOfLines/testFor.java|(62,95,<5,1>,<9,2>),1>};
 	
 
 
