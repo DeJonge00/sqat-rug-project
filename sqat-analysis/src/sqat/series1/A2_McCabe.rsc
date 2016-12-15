@@ -13,6 +13,9 @@ Questions:
 - which method has the highest complexity (use the @src annotation to get a method's location)
 
 - how does pacman fare w.r.t. the SIG maintainability McCabe thresholds?
+The highest complexity of a method we found is 8, according to the table in the SIG paper, this makes the 
+program "simple, without much risk", a ++.
+(The method is: public Direction nextMove() in Inky.java)
 
 - is code size correlated with McCabe in this case (use functions in analysis::statistics::Correlation to find out)? 
   (Background: Davy Landman, Alexander Serebrenik, Eric Bouwers and Jurgen J. Vinju. Empirical analysis 
@@ -116,7 +119,7 @@ void q() {
 
 // --- TESTING ---
 // Test complexity()
-test bool testFileLength()
+test bool testForloopComplexity()
 	= declarationComplexity(createAstsFromEclipseProject(|project://sqat-test-project/src/series1_numberOfLines/NumberOfLines1.java|)) 
 	== {<|project://sqat-test-project/src/series1_numberOfLines/testFor.java|(62,95,<5,1>,<9,2>),1>};
 	
