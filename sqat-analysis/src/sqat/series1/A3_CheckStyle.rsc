@@ -50,22 +50,22 @@ set[Message] checkConstantName(loc file,regexp pattern,bool applyToPublic,
 	list[str] code = readFileLines(file);
 	for(str s <- code) {
 		if (applyToPublic) {
-			if (/.*public.*/ := s  && /.*<pattern>.*/ ! := s) {
+			if (/.*public.*/ := s  && /.*<pattern>.*/ !:= s) {
 				println(file.path+" "+lineNum+": public constant does not satisfy naming convention!");
 			}
 		}
 		if (applyToProtected) {
-			if (/.*protected.*/ := s  && /.*<pattern>.*/ ! := s) {
+			if (/.*protected.*/ := s  && /.*<pattern>.*/ !:= s) {
 				println(file.path+" "+lineNum+": protected constant does not satisfy naming convention!");
 			}
 		}
 		if (applyToPackage) {
-			if (/.*package-private.*/ := s  && /.*<pattern>.*/ ! := s) {
+			if (/.*package-private.*/ := s  && /.*<pattern>.*/ !:= s) {
 				println(file.path+" "+lineNum+": package-private constant does not satisfy naming convention!");
 			}
 		}
 		if (applyToPrivate) {
-			if (/.*private.*/ := s  && /.*<pattern>.*/ ! := s) {
+			if (/.*private.*/ := s  && /.*<pattern>.*/ !:= s) {
 				println(file.path+" "+lineNum+": private constant does not satisfy naming convention!");
 			}
 		}
@@ -79,7 +79,7 @@ set[Message] checkFileLength(loc file,int maxLength,list[str] extensions) {
 	}
 	list[str] code = readFileLines(file);
 	if (size(code)>maxLength) {
-		println(file.path+": This file is too long!")
+		println(file.path+": This file is too long!");
 	}
 }
 
@@ -92,9 +92,10 @@ set[Message] checkIllegalCatch(loc file,list[str] exceptions) {
 	list[str] code = readFileLines(file);
 	for(str s <- code) {
 		lineNum+=1;
-		for (str ex)
-		if (/.*catch.*\(.*<ex>.*\).*$/ := s) {
-			println(file.path+" "+lineNum+": Illegal Catch: "+ex);
+		for (str ex <- exceptions) {
+			if (/.*catch.*\(.*<ex>.*\).*$/ := s) {
+				println(file.path+" "+lineNum+": Illegal Catch: "+ex);
+			}
 		}
 	}
 }
@@ -107,7 +108,7 @@ set[Message] check4(list[str] code) {
 	int lineNum = 0;
 	list[str] code = readFileLines(file);
 	for(str s <- code) {
-		
+		print("");
 	}
 }
 

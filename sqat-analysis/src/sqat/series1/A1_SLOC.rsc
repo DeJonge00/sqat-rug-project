@@ -107,8 +107,8 @@ SLOC sloc(loc project) {
 	println(totalsloc);
 	print("total lines of test code: ");
 	println(testloc);
-	print("ratio between actual code and test code: ");
-	println((totalsloc-testloc)/testloc);
+	print("fraction of total code that is test code: ");
+	println(testloc/(totalsloc-testloc));
 	
 	return result;
 }
@@ -118,7 +118,8 @@ SLOC q() {
 }
 
 test bool testFileLength()
-	= sloc(/*TODO*/) == (/*TODO*/);
+	= sloc(|project://sqat-test-project/src/series1_numberOfLines|)
+	== (|project://sqat-test-project/src/series1_numberOfLines/NumberOfLines.java|:3);
 	
 // Test isStartOfComment()
 test bool isBeginCommentFalse()
