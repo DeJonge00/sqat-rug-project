@@ -1,7 +1,11 @@
 module sqat::series1::A3_CheckStyle
 
 import lang::java::\syntax::Java15;
+import IO;
+import util::FileSystem;
+import String;
 import Message;
+import List;
 
 /*
 
@@ -42,49 +46,57 @@ Bonus:
 */
 
 /* Validates identifiers for constants. */
-set[Message] checkConstantName(loc file,regexp pattern,bool applyToPublic,
+set[Message] checkConstantName(loc file,str pattern,bool applyToPublic,
 					   bool applyToProtected, bool applyToPackage, bool applyToPrivate) {
+	set[Message] errors = {};
+	int lineNum = 0;
+	
 	if(file.extension != "java"){
 		return;
 	}
 	list[str] code = readFileLines(file);
 	for(str s <- code) {
+		lineNum += 1;
 		if (applyToPublic) {
-			if (/.*public.*/ := s  && /.*<pattern>.*/ !:= s) {
-				println(file.path+" "+lineNum+": public constant does not satisfy naming convention!");
+			if (/\s*public.*/ := s  && /\s*public.*<pattern>\s*\;/ !:= s) {
+				errors += error("public constant does not satisfy naming convention",file + ("(1,2)"));
 			}
 		}
 		if (applyToProtected) {
-			if (/.*protected.*/ := s  && /.*<pattern>.*/ !:= s) {
-				println(file.path+" "+lineNum+": protected constant does not satisfy naming convention!");
+			if (/\s*protected.*/ := s  && /\s*public.*<pattern>\s*\;/ !:= s) {
+				errors += error("protected constant does not satisfy naming convention",file);
 			}
 		}
 		if (applyToPackage) {
-			if (/.*package-private.*/ := s  && /.*<pattern>.*/ !:= s) {
-				println(file.path+" "+lineNum+": package-private constant does not satisfy naming convention!");
+			if (/\s*package-private.*/ := s  && /\s*public.*<pattern>\s*\;/ !:= s) {
+				errors += error("package-private constant does not satisfy naming convention",file);
 			}
 		}
 		if (applyToPrivate) {
-			if (/.*private.*/ := s  && /.*<pattern>.*/ !:= s) {
-				println(file.path+" "+lineNum+": private constant does not satisfy naming convention!");
+			if (/\s*private.*/ := s  && /\s*public.*<pattern>\s*\;/ !:= s) {
+				errors += error("private constant does not satisfy naming convention",file);
 			}
 		}
 	}
+	return errors;
 }
 
 /* Checks whether a file of the specified extension is at most the specified length. */
 set[Message] checkFileLength(loc file,int maxLength,list[str] extensions) {
+	set[Message] errors = {};
 	if(indexOf(extensions,file.extension) == -1){
 		return;
 	}
 	list[str] code = readFileLines(file);
 	if (size(code)>maxLength) {
-		println(file.path+": This file is too long!");
+		errors += error("File too long",file);
 	}
+	return errors;
 }
 
 /* Checks that certain exception types do not appear in a catch statement. */
 set[Message] checkIllegalCatch(loc file,list[str] exceptions) {
+	set[Message] errors = {};
 	if(file.extension != "java"){
 		return;
 	}
@@ -94,13 +106,14 @@ set[Message] checkIllegalCatch(loc file,list[str] exceptions) {
 		lineNum+=1;
 		for (str ex <- exceptions) {
 			if (/.*catch.*\(.*<ex>.*\).*$/ := s) {
-				println(file.path+" "+lineNum+": Illegal Catch: "+ex);
+				errors += error("Illegal Catch: "+ex,file);
 			}
 		}
 	}
+	return errors;
 }
 
-/* TODO: personal style check */
+/* TODO: personal style check 
 set[Message] check4(list[str] code) {
 	if(file.extension != "java"){
 		return;
@@ -110,16 +123,17 @@ set[Message] check4(list[str] code) {
 	for(str s <- code) {
 		print("");
 	}
-}
+}*/
 
 set[Message] checkStyle(loc project) {
  	set[Message] result = {};
+ 	set[loc] projectFiles = files(project);
 
  	for (loc file <- projectFiles) {
-		checkConstantName(file);
-		checkFileLength(file);
-		checkIllegalCatch(file);
-		check4(file);
+		result += checkConstantName(file,"x",true,false,false,true);
+		result += checkFileLength(file,100,["java"]);
+		result += checkIllegalCatch(file,[]);
+		//result += check4(file);
 	}
   
 	return result;
