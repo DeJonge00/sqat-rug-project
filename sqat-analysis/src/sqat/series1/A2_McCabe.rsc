@@ -101,4 +101,10 @@ void q1() {
 	println(tc);
 }
 
+// --- TESTING ---
+// Test complexity()
+test bool testFileLength()
+	= complexity(/*TODO*/) == (/*TODO*/);
+	
+
 
