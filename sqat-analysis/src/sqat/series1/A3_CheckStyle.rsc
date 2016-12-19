@@ -1,7 +1,11 @@
 module sqat::series1::A3_CheckStyle
 
 import lang::java::\syntax::Java15;
+import IO;
+import util::FileSystem;
+import String;
 import Message;
+import List;
 
 /*
 
@@ -41,66 +45,56 @@ Bonus:
 
 */
 
-/* Validates identifiers for constants. */
-set[Message] checkConstantName(loc file,regexp pattern,bool applyToPublic,
-					   bool applyToProtected, bool applyToPackage, bool applyToPrivate) {
+/* Checks for comments of the form */
+set[Message] checkToDo(loc file) {
+	set[Message] warnings = {};
 	if(file.extension != "java"){
 		return;
 	}
+	int lineNumber = 0;
 	list[str] code = readFileLines(file);
 	for(str s <- code) {
-		if (applyToPublic) {
-			if (/.*public.*/ := s  && /.*<pattern>.*/ !:= s) {
-				println(file.path+" "+lineNum+": public constant does not satisfy naming convention!");
-			}
-		}
-		if (applyToProtected) {
-			if (/.*protected.*/ := s  && /.*<pattern>.*/ !:= s) {
-				println(file.path+" "+lineNum+": protected constant does not satisfy naming convention!");
-			}
-		}
-		if (applyToPackage) {
-			if (/.*package-private.*/ := s  && /.*<pattern>.*/ !:= s) {
-				println(file.path+" "+lineNum+": package-private constant does not satisfy naming convention!");
-			}
-		}
-		if (applyToPrivate) {
-			if (/.*private.*/ := s  && /.*<pattern>.*/ !:= s) {
-				println(file.path+" "+lineNum+": private constant does not satisfy naming convention!");
-			}
+		lineNumber += 1;
+		if (/^\s*\/\/TODO.*$/ := s) {
+			warnings += warning("This line contains a todo statement.", file + ":line<lineNumber>");
 		}
 	}
+	return warnings;
 }
 
 /* Checks whether a file of the specified extension is at most the specified length. */
-set[Message] checkFileLength(loc file,int maxLength,list[str] extensions) {
+set[Message] checkFileLength(loc file, int maxLength, list[str] extensions) {
+	set[Message] warnings = {};
 	if(indexOf(extensions,file.extension) == -1){
 		return;
 	}
 	list[str] code = readFileLines(file);
-	if (size(code)>maxLength) {
-		println(file.path+": This file is too long!");
+	if (size(code) > maxLength) {
+		warnings += warning("File too long",file);
 	}
+	return warnings;
 }
 
-/* Checks that certain exception types do not appear in a catch statement. */
-set[Message] checkIllegalCatch(loc file,list[str] exceptions) {
+/* Checks that the specified exception types do not appear in a catch statement. */
+set[Message] checkIllegalCatch(loc file, list[str] exceptions) {
+	set[Message] warnings = {};
 	if(file.extension != "java"){
 		return;
 	}
-	int lineNum = 0;
+	int lineNumber = 0;
 	list[str] code = readFileLines(file);
 	for(str s <- code) {
-		lineNum+=1;
+		lineNumber += 1;
 		for (str ex <- exceptions) {
-			if (/.*catch.*\(.*<ex>.*\).*$/ := s) {
-				println(file.path+" "+lineNum+": Illegal Catch: "+ex);
+			if (/^.*catch.*\(.*<ex>.*\).*$/ := s) {
+				warnings += warning("Illegal Catch: " + ex, file + ":line<lineNumber>");
 			}
 		}
 	}
+	return warnings;
 }
 
-/* TODO: personal style check */
+/* TODO: personal style check 
 set[Message] check4(list[str] code) {
 	if(file.extension != "java"){
 		return;
@@ -110,17 +104,22 @@ set[Message] check4(list[str] code) {
 	for(str s <- code) {
 		print("");
 	}
-}
+}*/
 
 set[Message] checkStyle(loc project) {
  	set[Message] result = {};
+ 	set[loc] projectFiles = files(project);
 
  	for (loc file <- projectFiles) {
-		checkConstantName(file);
-		checkFileLength(file);
-		checkIllegalCatch(file);
-		check4(file);
+		result += checkToDo(file);
+		result += checkFileLength(file,100,["java"]);
+		result += checkIllegalCatch(file,[]);
+		//result += check4(file);
 	}
   
 	return result;
 }
+
+test bool testCheckToDo()
+	= checkToDo(|project://sqat-test-project/src/series1_CheckStyle/CheckToDo.java|)
+	== ();
