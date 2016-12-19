@@ -45,58 +45,39 @@ Bonus:
 
 */
 
-/* Validates identifiers for constants. */
-set[Message] checkConstantName(loc file,str pattern,bool applyToPublic,
-					   bool applyToProtected, bool applyToPackage, bool applyToPrivate) {
-	set[Message] errors = {};
-	int lineNum = 0;
-	
+/* Checks for comments of the form */
+set[Message] checkToDo(loc file) {
+	set[Message] warnings = {};
 	if(file.extension != "java"){
 		return;
 	}
+	int lineNum = 0;
 	list[str] code = readFileLines(file);
 	for(str s <- code) {
-		lineNum += 1;
-		if (applyToPublic) {
-			if (/\s*public.*/ := s  && /\s*public.*<pattern>\s*\;/ !:= s) {
-				errors += error("public constant does not satisfy naming convention",file + ("(1,2)"));
-			}
-		}
-		if (applyToProtected) {
-			if (/\s*protected.*/ := s  && /\s*public.*<pattern>\s*\;/ !:= s) {
-				errors += error("protected constant does not satisfy naming convention",file);
-			}
-		}
-		if (applyToPackage) {
-			if (/\s*package-private.*/ := s  && /\s*public.*<pattern>\s*\;/ !:= s) {
-				errors += error("package-private constant does not satisfy naming convention",file);
-			}
-		}
-		if (applyToPrivate) {
-			if (/\s*private.*/ := s  && /\s*public.*<pattern>\s*\;/ !:= s) {
-				errors += error("private constant does not satisfy naming convention",file);
-			}
+		lineNum+=1;
+		if (/^\s*\/\/TODO.*$/ := s) {
+			warnings += warning("This line contains a todo statement.",file);
 		}
 	}
-	return errors;
+	return warnings;
 }
 
 /* Checks whether a file of the specified extension is at most the specified length. */
 set[Message] checkFileLength(loc file,int maxLength,list[str] extensions) {
-	set[Message] errors = {};
+	set[Message] warnings = {};
 	if(indexOf(extensions,file.extension) == -1){
 		return;
 	}
 	list[str] code = readFileLines(file);
 	if (size(code)>maxLength) {
-		errors += error("File too long",file);
+		warnings += warning("File too long",file);
 	}
-	return errors;
+	return warnings;
 }
 
-/* Checks that certain exception types do not appear in a catch statement. */
+/* Checks that the specified exception types do not appear in a catch statement. */
 set[Message] checkIllegalCatch(loc file,list[str] exceptions) {
-	set[Message] errors = {};
+	set[Message] warnings = {};
 	if(file.extension != "java"){
 		return;
 	}
@@ -105,12 +86,12 @@ set[Message] checkIllegalCatch(loc file,list[str] exceptions) {
 	for(str s <- code) {
 		lineNum+=1;
 		for (str ex <- exceptions) {
-			if (/.*catch.*\(.*<ex>.*\).*$/ := s) {
-				errors += error("Illegal Catch: "+ex,file);
+			if (/^.*catch.*\(.*<ex>.*\).*$/ := s) {
+				warnings += warning("Illegal Catch: "+ex,file);
 			}
 		}
 	}
-	return errors;
+	return warnings;
 }
 
 /* TODO: personal style check 
@@ -130,7 +111,7 @@ set[Message] checkStyle(loc project) {
  	set[loc] projectFiles = files(project);
 
  	for (loc file <- projectFiles) {
-		result += checkConstantName(file,"x",true,false,false,true);
+		result += checkToDo(file,"x",true,false,false,true);
 		result += checkFileLength(file,100,["java"]);
 		result += checkIllegalCatch(file,[]);
 		//result += check4(file);

@@ -33,14 +33,20 @@ Bonus:
 
 */
 
+/* checks whether this line is a comment of the form "//comment" */
 bool isComment(str s) {
 	return ( /^\s*\/\/.*$/ := s);
 }
 
+/* checks whether a line is whitespace-only */
 bool isWhite(str s) {
 	return (/^\s*$/ := s);
 }
 
+/* checks for the start of a comment: 
+	0: this line is not the start of a comment 
+	1: this line is the start of a comment 
+	2: this line is the start of a comment, but also has code before that comment */
 int isStartOfComment(str s) {
 	if (/^\s*\/\*.*$/ := s) {
 		return 1;
@@ -51,6 +57,10 @@ int isStartOfComment(str s) {
 	return 0;
 }
 
+/* checks for the end of a comment: 
+	0: this line is not the end of a comment 
+	1: this line is the end of a comment 
+	2: this line is the end of a comment, but also has code after that comment */
 int isEndOfComment(str s) {
 	if (/^.*\*\/\s*$/ := s) {
 		return 1;
