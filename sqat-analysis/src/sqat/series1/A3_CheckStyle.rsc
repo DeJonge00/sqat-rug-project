@@ -51,43 +51,43 @@ set[Message] checkToDo(loc file) {
 	if(file.extension != "java"){
 		return;
 	}
-	int lineNum = 0;
+	int lineNumber = 0;
 	list[str] code = readFileLines(file);
 	for(str s <- code) {
-		lineNum+=1;
+		lineNumber += 1;
 		if (/^\s*\/\/TODO.*$/ := s) {
-			warnings += warning("This line contains a todo statement.",file);
+			warnings += warning("This line contains a todo statement.", file + ":line<lineNumber>");
 		}
 	}
 	return warnings;
 }
 
 /* Checks whether a file of the specified extension is at most the specified length. */
-set[Message] checkFileLength(loc file,int maxLength,list[str] extensions) {
+set[Message] checkFileLength(loc file, int maxLength, list[str] extensions) {
 	set[Message] warnings = {};
 	if(indexOf(extensions,file.extension) == -1){
 		return;
 	}
 	list[str] code = readFileLines(file);
-	if (size(code)>maxLength) {
+	if (size(code) > maxLength) {
 		warnings += warning("File too long",file);
 	}
 	return warnings;
 }
 
 /* Checks that the specified exception types do not appear in a catch statement. */
-set[Message] checkIllegalCatch(loc file,list[str] exceptions) {
+set[Message] checkIllegalCatch(loc file, list[str] exceptions) {
 	set[Message] warnings = {};
 	if(file.extension != "java"){
 		return;
 	}
-	int lineNum = 0;
+	int lineNumber = 0;
 	list[str] code = readFileLines(file);
 	for(str s <- code) {
-		lineNum+=1;
+		lineNumber += 1;
 		for (str ex <- exceptions) {
 			if (/^.*catch.*\(.*<ex>.*\).*$/ := s) {
-				warnings += warning("Illegal Catch: "+ex,file);
+				warnings += warning("Illegal Catch: " + ex, file + ":line<lineNumber>");
 			}
 		}
 	}
@@ -111,7 +111,7 @@ set[Message] checkStyle(loc project) {
  	set[loc] projectFiles = files(project);
 
  	for (loc file <- projectFiles) {
-		result += checkToDo(file,"x",true,false,false,true);
+		result += checkToDo(file);
 		result += checkFileLength(file,100,["java"]);
 		result += checkIllegalCatch(file,[]);
 		//result += check4(file);
@@ -119,3 +119,7 @@ set[Message] checkStyle(loc project) {
   
 	return result;
 }
+
+test bool testCheckToDo()
+	= checkToDo(|project://sqat-test-project/src/series1_CheckStyle/CheckToDo.java|)
+	== ();
