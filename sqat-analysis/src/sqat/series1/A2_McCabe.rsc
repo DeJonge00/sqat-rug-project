@@ -1,6 +1,7 @@
 module sqat::series1::A2_McCabe
 
 import lang::java::jdt::m3::AST;
+import analysis::statistics::Correlation;
 import IO;
 
 /*
@@ -92,17 +93,26 @@ CC cc(set[Declaration] decls) {
 alias CCDist = map[int cc, int freq];
 
 CCDist ccDist(CC cc) {
-
+	CCDist histogram = ();
+	
+	for(<l, c> <- cc) {
+		if(c in histogram)
+			histogram[c]+=1;
+		else
+			histogram[c]=1;	
+	}
+	return histogram;
 }
 
 void q() {
 	int tc = 0;
 	int max = 0;
 	loc maxfile;
-	for(<loc l, int n> <- cc(jpacmanASTs())) {
-		print(l);
-		print(" has complexity: " );
-		println(n);
+	CC c = cc(jpacmanASTs());
+	for(<loc l, int n> <- c) {
+		//print(l);
+		//print(" has complexity: " );
+		//println(n);
 		if(n > max) {
 			max = n;
 			maxfile = l;
@@ -112,16 +122,36 @@ void q() {
 	print("Total complexity: ");
 	println(tc);
 	print("Method with highest complexity is in: ");
-	print(maxfile);
-	print(" with complexity: ");
+	println(maxfile);
+	print("with complexity: ");
 	println(max);
+	
+	// Histogram
+	println(ccDist(c));
+}
+
+int testfunc(loc l, string methodName) {
+	visit(createAstFromFile(l, true)) {
+		case method: \method(_,name,_,_,code): if(name == methodName) return 1 + complexity(code);
+	}
+	return -1;
 }
 
 // --- TESTING ---
 // Test complexity()
-test bool testForloopComplexity()
-	= declarationComplexity(createAstsFromEclipseProject(|project://sqat-test-project/src/series1_numberOfLines/NumberOfLines1.java|)) 
-	== {<|project://sqat-test-project/src/series1_numberOfLines/testFor.java|(62,95,<5,1>,<9,2>),1>};
+loc testfile = |project://sqat-test-project/src/series1_numberOfLines/TestA2.java|;
+test bool testDummy() = testfunc(testfile, "testDummy") == 1;
+test bool testIf() = testfunc(testfile, "testIf") == 2;
+test bool testElse() = testfunc(testfile, "testIfElse") == 2;
+test bool testDo() = testfunc(testfile, "testDo") == 2;
+test bool testWhile() = testfunc(testfile, "testWhile") == 2;
+test bool testFor() = testfunc(testfile, "testFor") == 2;
+test bool testForeach() = testfunc(testfile, "testForeach") == 2;
+test bool testCase() = testfunc(testfile, "testCase") == 2;
+test bool testCatch() = testfunc(testfile, "testCatch") == 2;
+test bool testAnd() = testfunc(testfile, "testAnd") == 3;
+test bool testOr() = testfunc(testfile, "testOr") == 3;
+test bool testConditional() = testfunc(testfile, "testConditional") == 2;
 	
 
 
