@@ -19,6 +19,10 @@ public class CheckToDo {
 	
 	//This method does absolutely nothing.
 	public void nothing() {
-		
+		/* TODO: abslutely nothing */
+	}
+	
+	public void TODO() {
+		//this function should not be found by checkToDo.
 	}
 }

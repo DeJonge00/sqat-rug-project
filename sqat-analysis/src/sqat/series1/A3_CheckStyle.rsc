@@ -45,44 +45,58 @@ Bonus:
 
 */
 
-/* Checks for comments of the form */
+/* Checks for comments of the form //TODO:... or /*TODO:.. */
 set[Message] checkToDo(loc file) {
-	set[Message] warnings = {};
 	if(file.extension != "java"){
-		return;
+		return {};
 	}
+	
 	int lineNumber = 0;
+	bool inComment = false;
 	list[str] code = readFileLines(file);
+	set[Message] warnings = {};
+	
 	for(str s <- code) {
 		lineNumber += 1;
-		if (/^\s*\/\/TODO.*$/ := s) {
+		if (/\/\*/ := s && /\*\// !:= s) {
+			inComment = true;
+		} else if (/\*\// := s) {
+			inComment = false;
+		}
+		if (/^\s*\/\/TODO.*$/ := s || (inComment && /TODO/ := s) || (/\/\*.*TODO.*\*\// := s)) {
 			warnings += warning("This line contains a todo statement.", file + ":line<lineNumber>");
 		}
 	}
+	
 	return warnings;
 }
 
 /* Checks whether a file of the specified extension is at most the specified length. */
 set[Message] checkFileLength(loc file, int maxLength, list[str] extensions) {
-	set[Message] warnings = {};
 	if(indexOf(extensions,file.extension) == -1){
-		return;
+		return {};
 	}
+	
+	set[Message] warnings = {};
 	list[str] code = readFileLines(file);
+	
 	if (size(code) > maxLength) {
 		warnings += warning("File too long",file);
 	}
+	
 	return warnings;
 }
 
 /* Checks that the specified exception types do not appear in a catch statement. */
 set[Message] checkIllegalCatch(loc file, list[str] exceptions) {
-	set[Message] warnings = {};
 	if(file.extension != "java"){
-		return;
+		return {};
 	}
+	
 	int lineNumber = 0;
+	set[Message] warnings = {};
 	list[str] code = readFileLines(file);
+	
 	for(str s <- code) {
 		lineNumber += 1;
 		for (str ex <- exceptions) {
@@ -91,10 +105,11 @@ set[Message] checkIllegalCatch(loc file, list[str] exceptions) {
 			}
 		}
 	}
+	
 	return warnings;
 }
 
-/* TODO: personal style check 
+//TODO: personal style check 
 set[Message] check4(list[str] code) {
 	if(file.extension != "java"){
 		return;
@@ -104,7 +119,7 @@ set[Message] check4(list[str] code) {
 	for(str s <- code) {
 		print("");
 	}
-}*/
+}
 
 set[Message] checkStyle(loc project) {
  	set[Message] result = {};
@@ -112,14 +127,56 @@ set[Message] checkStyle(loc project) {
 
  	for (loc file <- projectFiles) {
 		result += checkToDo(file);
-		result += checkFileLength(file,100,["java"]);
-		result += checkIllegalCatch(file,[]);
+		result += checkFileLength(file,500,["java"]);
+		result += checkIllegalCatch(file,["java.lang.Exception", "java.lang.Throwable", "java.lang.RuntimeException"]);
 		//result += check4(file);
 	}
   
 	return result;
 }
 
+
+
+// Test methods"
+
 test bool testCheckToDo()
 	= checkToDo(|project://sqat-test-project/src/series1_CheckStyle/CheckToDo.java|)
-	== ();
+	== {
+  		warning("This line contains a todo statement.",
+  		|project://sqat-test-project/src/series1_CheckStyle/CheckToDo.java/:line9|),
+  		warning("This line contains a todo statement.",
+  		|project://sqat-test-project/src/series1_CheckStyle/CheckToDo.java/:line16|),
+  		warning("This line contains a todo statement.",
+  		|project://sqat-test-project/src/series1_CheckStyle/CheckToDo.java/:line22|)
+		};
+		
+test bool testCheckToDo()
+	= checkToDo(|project://sqat-test-project/src/series1_CheckStyle/EmptyFile.bmp|)
+	== {};
+		
+test bool testCheckFileLength()
+	= checkFileLength(|project://sqat-test-project/src/series1_CheckStyle/CheckToDo.java|,25,["java"])
+	== {warning("File too long",|project://sqat-test-project/src/series1_CheckStyle/CheckToDo.java|)};
+	
+test bool testCheckFileLength()
+	= checkFileLength(|project://sqat-test-project/src/series1_CheckStyle/CheckToDo.java|,40,["java"])
+	== {};
+	
+test bool testCheckFileLength()
+	= checkFileLength(|project://sqat-test-project/src/series1_CheckStyle/CheckToDo.java|,5,["php"])
+	== {};
+	
+test bool testCheckIllegalCatch()
+	= checkIllegalCatch(|project://sqat-test-project/src/series1_CheckStyle/CheckIllegalCatch.java|,
+		["java.lang.Exception", "java.lang.Throwable", "java.lang.RuntimeException"])
+	== {
+  		warning("Illegal Catch: java.lang.Throwable",
+    		|project://sqat-test-project/src/series1_CheckStyle/CheckIllegalCatch.java/:line12|),
+  		warning("Illegal Catch: java.lang.Exception",
+    		|project://sqat-test-project/src/series1_CheckStyle/CheckIllegalCatch.java/:line9|)
+		};
+	
+test bool testCheckIllegalCatch()
+	= checkIllegalCatch(|project://sqat-test-project/src/series1_CheckStyle/EmptyFile.bmp|,
+		["java.lang.Exception", "java.lang.Throwable", "java.lang.RuntimeException"])
+	== {};
