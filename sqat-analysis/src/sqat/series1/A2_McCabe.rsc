@@ -127,10 +127,11 @@ void q() {
 	println(max);
 	
 	// Histogram
+	print("Histogram: ");
 	println(ccDist(c));
 }
 
-int testfunc(loc l, string methodName) {
+int testfunc(loc l, str methodName) {
 	visit(createAstFromFile(l, true)) {
 		case method: \method(_,name,_,_,code): if(name == methodName) return 1 + complexity(code);
 	}
@@ -152,6 +153,8 @@ test bool testCatch() = testfunc(testfile, "testCatch") == 2;
 test bool testAnd() = testfunc(testfile, "testAnd") == 3;
 test bool testOr() = testfunc(testfile, "testOr") == 3;
 test bool testConditional() = testfunc(testfile, "testConditional") == 2;
-	
+test bool testNestedIf() = testfunc(testfile, "testNestedIf") == 3;
+test bool testNestedElse() = testfunc(testfile, "testNestedElse") == 3;
+
 
 

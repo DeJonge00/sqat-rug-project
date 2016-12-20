@@ -80,4 +80,20 @@ public class TestA2 {
 	public void testConditional(int a, int b) {
 		a = (a > b) ? a : b;
 	}
+	
+	public void testNestedIf() {
+		if(true) {
+			if(true)
+				System.out.print("Hallo");
+		}
+	}
+	
+	public void testNestedElse() {
+		if(true) {
+			System.out.print("Hallo");
+		} else {
+			if(true)
+				System.out.println("Halo");
+		}
+	}
 }
