@@ -48,12 +48,10 @@ bool isWhite(str s) {
 	1: this line is the start of a comment 
 	2: this line is the start of a comment, but also has code before that comment */
 int isStartOfComment(str s) {
-	if (/^\s*\/\*.*$/ := s) {
-		return 1;
-	}
-	if (/^.*\/\*.*$/ := s) {
+	if (/^\s*\/\*.*$/ := s)
 		return 2;
-	}
+	if (/^.*\/\*.*$/ := s)
+		return 1;
 	return 0;
 }
 
@@ -87,22 +85,16 @@ SLOC sloc(loc project) {
 				if (!(isComment(s) || isWhite(s))) {
 					if (inComment) {
 						int end = isEndOfComment(s);
-						if (end==1) {
+						if (end>=1)
 							inComment=false;
-						} else if (end==2) {
-							inComment=false;
+						if (end==2)
 							n=n+1;
-						}
 					} else {
 						int \start = isStartOfComment(s);
-						if (\start==1) {
+						if (\start>=1)
 							inComment=true;
-						} else if (\start==2) {
-							inComment=true;
+						if (\start<=1)
 							n=n+1;
-						} else {
-							n=n+1;
-						}
 					}
 				}
 			}
@@ -127,19 +119,16 @@ SLOC q() {
 	SLOC s =  sloc(|project://jpacman-framework/src|);
 }
 
-test bool testFileLength()
-	= sloc(|project://sqat-test-project/src/series1_numberOfLines|)
-	== (|project://sqat-test-project/src/series1_numberOfLines/NumberOfLines1.java|:3);
-	
+// --- TESTING ---
 // Test isStartOfComment()
 test bool isBeginCommentFalse()
 	= isStartOfComment("\n") == 0;
 	
 test bool isBeginCommentTrue()
-	= isStartOfComment("/*\n") == 1;
+	= isStartOfComment("/*\n") == 2;
 
 test bool isBeginCommentTruePlus()
-	= isStartOfComment("inti=0; /*\n") == 2;
+	= isStartOfComment("inti=0; /*\n") == 1;
 	
 // Test isEndOfComment()
 test bool isEndCommentFalse()
@@ -164,3 +153,14 @@ test bool isWhiteFalse()
 
 test bool isWhiteTrue()
 	= isWhite("    \n") == true;
+
+// Test sloc()
+loc testfile = |project://sqat-test-project/src/series1_numberOfLines/NumberOfLines1.java|;
+test bool testFileLength()
+	= sloc(testfile)
+	== (testfile:3);
+	
+loc testfile2 = |project://sqat-test-project/src/series1_numberOfLines/NumberOfLines2.java|;
+test bool testFileLength()
+	= sloc(testfile2)
+	== (testfile2:7);
