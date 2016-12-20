@@ -117,6 +117,7 @@ SLOC sloc(loc project) {
 
 SLOC q() {
 	SLOC s =  sloc(|project://jpacman-framework/src|);
+	return s;
 }
 
 // --- TESTING ---
