@@ -75,7 +75,7 @@ SLOC sloc(loc project) {
 	SLOC result = ();
 	set[loc] projectFiles = files(project);
 	real totalsloc = 0.0,testloc = 0.0;
-	
+	int max = 0; loc maxfile ;
 	for (loc file <- projectFiles) {
 		if(file.extension == "java"){
 			int n=0;
@@ -100,11 +100,17 @@ SLOC sloc(loc project) {
 			}
 			result += (file:n);
 			totalsloc += n;
+			if(n > max) {
+				max = n;
+				maxfile = file;
+			}
 			if (substring(file.path,5,9)=="test") {
 				testloc += n;
 			}
 		}
 	}
+	print("biggest file: ");
+	println(maxfile);
 	print("total lines of code: ");
 	println(totalsloc);
 	print("total lines of test code: ");
@@ -115,9 +121,8 @@ SLOC sloc(loc project) {
 	return result;
 }
 
-SLOC q() {
+void q() {
 	SLOC s =  sloc(|project://jpacman-framework/src|);
-	return s;
 }
 
 // --- TESTING ---
