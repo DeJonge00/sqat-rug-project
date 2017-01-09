@@ -109,16 +109,33 @@ set[Message] checkIllegalCatch(loc file, list[str] exceptions) {
 	return warnings;
 }
 
-//TODO: personal style check 
-set[Message] check4(list[str] code) {
+//TODO: personal style check : too much white lines
+/* checks whether a line is whitespace-only */
+bool isWhite(str s) {
+	return (/^\s*$/ := s);
+}
+
+set[Message] checkExcessWhite(loc file) {
 	if(file.extension != "java"){
 		return;
 	}
 	int lineNum = 0;
+	set[Message] warnings = {};
 	list[str] code = readFileLines(file);
+	bool e = false;
+	
 	for(str s <- code) {
-		print("");
+		lineNum += 1;
+		if(isWhite(s)) {
+			if(e) {
+				warnings += warning("Excess whiteline: ", file + ":line<lineNum>");
+			}
+			e = true;
+		} else {
+			e = false;
+		}
 	}
+	return warnings;
 }
 
 set[Message] checkStyle(loc project) {
@@ -129,13 +146,11 @@ set[Message] checkStyle(loc project) {
 		result += checkToDo(file);
 		result += checkFileLength(file,500,["java"]);
 		result += checkIllegalCatch(file,["java.lang.Exception", "java.lang.Throwable", "java.lang.RuntimeException"]);
-		//result += check4(file);
+		result += checkExcessWhite(file);
 	}
   
 	return result;
 }
-
-
 
 // Test methods"
 
@@ -180,3 +195,22 @@ test bool testCheckIllegalCatch()
 	= checkIllegalCatch(|project://sqat-test-project/src/series1_CheckStyle/EmptyFile.bmp|,
 		["java.lang.Exception", "java.lang.Throwable", "java.lang.RuntimeException"])
 	== {};
+
+test bool testCheckExcessWhite()
+	= checkExcessWhite(|project://sqat-test-project/src/series1_CheckStyle/CheckToDo.java|)
+	==   
+	  {
+	  warning(
+	    "Excess whiteline: ",
+	    |project://sqat-test-project/src/series1_CheckStyle/CheckToDo.java/:line26|),
+	  warning(
+	    "Excess whiteline: ",
+	    |project://sqat-test-project/src/series1_CheckStyle/CheckToDo.java/:line25|),
+	  warning(
+	    "Excess whiteline: ",
+	    |project://sqat-test-project/src/series1_CheckStyle/CheckToDo.java/:line33|),
+	  warning(
+	    "Excess whiteline: ",
+	    |project://sqat-test-project/src/series1_CheckStyle/CheckToDo.java/:line32|)
+	};
+
