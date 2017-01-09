@@ -104,7 +104,7 @@ SLOC sloc(loc project) {
 				max = n;
 				maxfile = file;
 			}
-			if (substring(file.path,5,9)=="test") {
+			if (/^.*test.*$/ := file.path) {
 				testloc += n;
 			}
 		}
