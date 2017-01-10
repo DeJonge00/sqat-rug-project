@@ -8,6 +8,5 @@ public class NumberOfLines1 {
 	/*
 	 * 
 	 */
-	
-	
+	/*  */ int a;
 }

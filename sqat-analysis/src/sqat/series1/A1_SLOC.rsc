@@ -83,17 +83,18 @@ SLOC sloc(loc project) {
 			list[str] code = readFileLines(file);
 			for(str s <- code) {
 				if (!(isComment(s) || isWhite(s))) {
+					if (!inComment) {
+						int \start = isStartOfComment(s);
+						if (\start>=1)
+							inComment=true;
+						if (\start<=1)
+							n=n+1;
+					}
 					if (inComment) {
 						int end = isEndOfComment(s);
 						if (end>=1)
 							inComment=false;
 						if (end==2)
-							n=n+1;
-					} else {
-						int \start = isStartOfComment(s);
-						if (\start>=1)
-							inComment=true;
-						if (\start<=1)
 							n=n+1;
 					}
 				}
@@ -164,7 +165,7 @@ test bool isWhiteTrue()
 loc testfile = |project://sqat-test-project/src/series1_numberOfLines/NumberOfLines1.java|;
 test bool testFileLength()
 	= sloc(testfile)
-	== (testfile:3);
+	== (testfile:4);
 	
 loc testfile2 = |project://sqat-test-project/src/series1_numberOfLines/NumberOfLines2.java|;
 test bool testFileLength()
