@@ -17,32 +17,13 @@ Questions:
 The highest complexity of a method we found is 8, according to the table in the SIG paper, this makes the 
 program "simple, without much risk", a ++.
 (The method is: public Direction nextMove() in Inky.java)
-
-- is code size correlated with McCabe in this case (use functions in analysis::statistics::Correlation to find out)? 
-  (Background: Davy Landman, Alexander Serebrenik, Eric Bouwers and Jurgen J. Vinju. Empirical analysis 
-  of the relationship between CC and SLOC in a large corpus of Java methods 
-  and C functions Journal of Software: Evolution and Process. 2016. 
-  http://homepages.cwi.nl/~jurgenv/papers/JSEP-2015.pdf)
-  
-- what if you separate out the test sources?
-
-Tips: 
-- the AST data type can be found in module lang::java::m3::AST
-- use visit to quickly find methods in Declaration ASTs
-- compute McCabe by matching on AST nodes
-
-Sanity checks
-- write tests to check your implementation of McCabe
-
-Bonus
-- write visualization using vis::Figure and vis::Render to render a histogram.
-
 */
 
 set[Declaration] jpacmanASTs() = createAstsFromEclipseProject(|project://jpacman-framework|, true); 
 
 alias CC = rel[loc method, int cc];
 
+// returns the amount of branches in the mccabe model in the statement
 int complexity(Statement s) {
 	int c = 0;
 	visit(s) {
@@ -74,6 +55,7 @@ int complexity(Statement s) {
 	return c;
 }
 
+// returns the complexity of all methods in the declaration
 CC declarationComplexity(Declaration f) {
 	CC result = {};
     visit(f){
@@ -92,6 +74,7 @@ CC cc(set[Declaration] decls) {
 
 alias CCDist = map[int cc, int freq];
 
+// returns a histogram of the compexities in the cc
 CCDist ccDist(CC cc) {
 	CCDist histogram = ();
 	
@@ -104,6 +87,7 @@ CCDist ccDist(CC cc) {
 	return histogram;
 }
 
+// answers the above questions
 void q() {
 	int tc = 0;
 	int max = 0;
@@ -131,6 +115,7 @@ void q() {
 	println(ccDist(c));
 }
 
+// helperfunction for testing
 int testfunc(loc l, str methodName) {
 	visit(createAstFromFile(l, true)) {
 		case method: \method(_,name,_,_,code): if(name == methodName) return 1 + complexity(code);
