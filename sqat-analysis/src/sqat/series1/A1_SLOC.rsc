@@ -5,33 +5,14 @@ import util::FileSystem;
 import String;
 
 /* 
-
-Count Source Lines of Code (SLOC) per file:
-- ignore comments
-- ignore empty lines
-
-Tips
-- use locations with the project scheme: e.g. |project:///jpacman/...|
-- functions to crawl directories can be found in util::FileSystem
-- use the functions in IO to read source files
-
 Answer the following questions:
 - what is the biggest file in JPacman? jpacman/level/Level.java with 179 lines
 - what is the total size of JPacman? 2458
 - is JPacman large according to SIG maintainability? No, it is ranked ++ (very small) according to SIG, because it is less than 66000 loc
-- what is the ratio between actual code and test code size? 3.41
-
-Sanity checks:
-- write tests to ensure you are correctly skipping multi-line comments
-- and to ensure that consecutive newlines are counted as one.
-- compare you results to external tools sloc and/or cloc.pl
-
-Bonus:
-- write a hierarchical tree map visualization using vis::Figure and 
-  vis::Render quickly see where the large files are. 
-  (https://en.wikipedia.org/wiki/Treemapping) 
-
+- what is the ratio between actual code and test code size? 29% of the total code is test code.
 */
+
+alias SLOC = map[loc file, int sloc];
 
 /* checks whether this line is a comment of the form "//comment" */
 bool isComment(str s) {
@@ -69,13 +50,13 @@ int isEndOfComment(str s) {
 	return 0;
 }
 
-alias SLOC = map[loc file, int sloc];
-
+//Returns the source lines of code for every java file in the location, as well as the total SLOC.
 SLOC sloc(loc project) {
 	SLOC result = ();
 	set[loc] projectFiles = files(project);
 	real totalsloc = 0.0,testloc = 0.0;
 	int max = 0; loc maxfile ;
+	
 	for (loc file <- projectFiles) {
 		if(file.extension == "java"){
 			int n=0;
@@ -110,8 +91,12 @@ SLOC sloc(loc project) {
 			}
 		}
 	}
+	//printing results:
 	print("biggest file: ");
-	println(maxfile);
+	print(maxfile);
+	print(" with ");
+	print(max);
+	println(" lines of code.");
 	print("total lines of code: ");
 	println(totalsloc);
 	print("total lines of test code: ");
@@ -122,8 +107,9 @@ SLOC sloc(loc project) {
 	return result;
 }
 
-void q() {
-	SLOC s =  sloc(|project://jpacman-framework/src|);
+//return SLOC for JPacman
+SLOC questions() {
+	return sloc(|project://jpacman-framework/src|);
 }
 
 // --- TESTING ---
