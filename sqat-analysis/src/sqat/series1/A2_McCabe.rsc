@@ -25,7 +25,7 @@ alias CC = rel[loc method, int cc];
 
 // returns the amount of branches in the mccabe model in the statement
 int complexity(Statement s) {
-	int c = 0;
+	int c = 1;
 	visit(s) {
 		case x: \if(_,_): 
 			c+=1;
@@ -59,7 +59,7 @@ int complexity(Statement s) {
 CC declarationComplexity(Declaration f) {
 	CC result = {};
     visit(f){
-      case method: \method(_,_,_,_,code): result += <method@src, 1 + complexity(code)>;
+      case method: \method(_,_,_,_,code): result += <method@src, complexity(code)>;
     }
     return result;
 }
@@ -140,6 +140,3 @@ test bool testOr() = testfunc(testfile, "testOr") == 3;
 test bool testConditional() = testfunc(testfile, "testConditional") == 2;
 test bool testNestedIf() = testfunc(testfile, "testNestedIf") == 3;
 test bool testNestedElse() = testfunc(testfile, "testNestedElse") == 3;
-
-
-

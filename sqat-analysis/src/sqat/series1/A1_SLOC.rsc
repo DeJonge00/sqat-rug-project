@@ -54,7 +54,7 @@ int isEndOfComment(str s) {
 SLOC sloc(loc project) {
 	SLOC result = ();
 	set[loc] projectFiles = files(project);
-	real totalsloc = 0.0,testloc = 0.0;
+	real totalsloc = 0.0, testloc = 0.0;
 	int max = 0; loc maxfile ;
 	
 	for (loc file <- projectFiles) {
@@ -137,12 +137,15 @@ test bool isEndCommentTruePlus()
 test bool isCommentFalse()
 	= isComment("\n") == false;
 	
+test bool isCommentFalse2()
+	= isComment("int a; //comment \n") == false;
+	
 test bool isCommentTrue()
 	= isComment("   //comment\n") == true;
 	
 // Test isWhite()
 test bool isWhiteFalse()
-	= isWhite("   c  \n") == false;
+	= isWhite("  int c;  \n") == false;
 
 test bool isWhiteTrue()
 	= isWhite("    \n") == true;

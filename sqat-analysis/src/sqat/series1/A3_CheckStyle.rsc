@@ -18,7 +18,6 @@ set[Message] checkToDo(loc file) {
 	if(file.extension != "java"){
 		return {};
 	}
-	
 	int lineNumber = 0;
 	bool inComment = false;
 	list[str] code = readFileLines(file);

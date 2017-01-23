@@ -1,4 +1,2 @@
-
-foo.Foo cannot depend bar.Bar
-foo.Foo::init cannot instantiate bar.Bar
-foo cannot import bar
+nl.tudelft.jpacman.npc.ghost must inherit nl.tudelft.jpacman.npc
+nl.tudelft.jpacman.ui cannot depend nl.tudelft.jpacman.npc

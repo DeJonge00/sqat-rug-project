@@ -58,6 +58,50 @@ Questions
   of Dicto (and explain why you'd need them). 
 */
 
+loc getEntityLocation(Entity e1) {
+	return |java+class:///| + replaceAll("<e1>", ".", "/");
+}
+
+// 	Import
+set[loc] findImports(loc javafile) {
+	set[loc] foundImports = {};
+	
+	return foundImports;
+}
+
+// 	Inherits
+set[loc] findInherits(loc javafile, m3) {
+	set[loc] foundInherits = {};
+	for(<loc from, loc to> <- m3@extends) {
+		if(from == javafile) {
+			foundInherits += to;
+		}
+	}
+	return foundInherits;
+}
+
+Message mustInherit(Entity e1, Entity e2, M3 m3) {
+	if(getEntityLocation(e2) notin findInherits(getEntityLocation(e1), m3)) {
+		return "Warning: <e1> does not inherit from <e2> (must inherit)";
+	}
+	return {};
+}
+
+Message cannotInherit(Entity e1, Entity e2, M3 m3) {
+	if(getEntityLocation(e2) in findInherits(getEntityLocation(e1), m3)) {
+		return "Warning: <e1> inherits from <e2> (cannot inherit)";
+	}
+	return {};
+}
+
+Message canOnlyInherit(Entity e1, Entity e2, M3 m3) {
+	for(loc l <- findInherits(getEntityLocation(e1), m3)) {
+		if(getEntityLocation(e2) != l) {
+			return "Warning: <e1> inherits from something other than <e2> (can only inherit)";
+		}
+	}
+	return {};
+}
 
 set[Message] eval(start[Dicto] dicto, M3 m3) = eval(dicto.top, m3);
 
@@ -67,8 +111,16 @@ set[Message] eval((Dicto)`<Rule* rules>`, M3 m3)
 set[Message] eval(Rule rule, M3 m3) {
   set[Message] msgs = {};
   
-  // to be done
+  switch (rule) {
+  	case (Rule)`<Entity e1> must inherit <Entity e2>`: msgs += mustInherit(e1, e2, m3);
+	}
   
   return msgs;
+}
+
+set[loc] q() {
+	M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
+	return findInherits(|java+class:///nl/tudelft/jpacman/npc/NPC|,m3); 
+	
 }
 
