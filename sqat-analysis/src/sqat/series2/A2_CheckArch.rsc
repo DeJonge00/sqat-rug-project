@@ -5,6 +5,7 @@ import lang::java::jdt::m3::Core;
 import Message;
 import ParseTree;
 import IO;
+import String;
 
 
 /*
@@ -58,51 +59,138 @@ Questions
   of Dicto (and explain why you'd need them). 
 */
 
-loc getEntityLocation(Entity e1) {
-	return |java+class:///| + replaceAll("<e1>", ".", "/");
+loc getEntityLocation(Entity e) {
+	println(e);
+	if(contains("<e>", "::")) {
+		str name = replaceAll(replaceAll("<e>", ".", "/"), "::", "/") + "()";
+		return |java+method:///| + name;
+	}
+	return |java+class:///| + replaceAll("<e>", ".", "/");
 }
 
-// 	Import
-set[loc] findImports(loc javafile) {
-	set[loc] foundImports = {};
-	
-	return foundImports;
+bool isMethod(Entity e) {
+	return contains("<e>", "::");
 }
 
-// 	Inherits
-set[loc] findInherits(loc javafile, m3) {
+// 	Class depends on class
+set[loc] findDependancies(loc file, M3 m3) {
+	set[loc] foundDependancies = {};
+	//println(file);
+	for(<loc src, loc name> <- m3@uses) {
+		if(src == file) {
+			foundDependancies += name;
+			println(same);
+		}
+	}
+	return foundDependancies;
+}
+
+Message mustDepend(Entity e1, Entity e2, M3 m3) {
+	loc file = getEntityLocation(e1);
+	if(getEntityLocation(e2) notin findDependancies(file, m3)) {
+		return warning("<e1> does not depend on <e2> (must depend)", file);
+	}
+	return {};
+}
+
+Message cannotDepend(Entity e1, Entity e2, M3 m3) {
+	return {};
+}
+
+Message canOnlyDepend(Entity e1, Entity e2, M3 m3) {
+	return {};
+}
+
+// 	Class inherits class
+set[loc] findInherits(loc file, m3) {
 	set[loc] foundInherits = {};
 	for(<loc from, loc to> <- m3@extends) {
-		if(from == javafile) {
+		if(from == file) {
 			foundInherits += to;
 		}
 	}
 	return foundInherits;
 }
 
-Message mustInherit(Entity e1, Entity e2, M3 m3) {
-	if(getEntityLocation(e2) notin findInherits(getEntityLocation(e1), m3)) {
-		return "Warning: <e1> does not inherit from <e2> (must inherit)";
+Message mustInherit(Entity e1, str modality, Entity e2, M3 m3) {
+	Message warnings = {};
+	loc file = getEntityLocation(e1);
+	if(getEntityLocation(e2) notin findInherits(file, m3)) {
+		return warning("<e1> does not inherit from <e2> (must inherit)", file);
 	}
-	return {};
+	return warnings;
 }
 
 Message cannotInherit(Entity e1, Entity e2, M3 m3) {
-	if(getEntityLocation(e2) in findInherits(getEntityLocation(e1), m3)) {
-		return "Warning: <e1> inherits from <e2> (cannot inherit)";
+	Message warnings = {};
+	
+	loc file = getEntityLocation(e1);
+	if(getEntityLocation(e2) notin findInherits(file, m3)) {
+		warnings += warning("<e1> inherits from <e2> (cannot inherit)", file);
 	}
-	return {};
+	return warnings;
 }
 
 Message canOnlyInherit(Entity e1, Entity e2, M3 m3) {
-	for(loc l <- findInherits(getEntityLocation(e1), m3)) {
+	Message warnings = {};
+	getEntityLocation(e1);
+	for(loc l <- findInherits(file, m3)) {
 		if(getEntityLocation(e2) != l) {
-			return "Warning: <e1> inherits from something other than <e2> (can only inherit)";
+			return warning("<e1> inherits from something other than <e2> (can only inherit)", file);
 		}
 	}
-	return {};
+	return warnings;
 }
 
+// Class/method invokes method
+set[loc] classInvokesMethods(loc class, M3 m3) {
+	set[loc] methodsInvoked = {};
+	set[loc] methodsInClass = {};
+	for(<loc name, loc src> <- m3@declarations) {
+		if(src == class) {
+			methodsInClass += name;
+			print("MethodInClass: ");
+			println(to);
+		}
+	}
+	for(loc method <- methodsInClass) {
+		methodsInvoked += methodInvokesMethods(method, m3);
+	}
+	return methodsInvoked;
+}
+
+set[loc] methodInvokesMethods(loc method, M3 m3) {
+	set[loc] methods = {};
+	for(<loc from, loc to> <- m3@methodInvocation) {
+		if(from == method) {
+			methods += to;
+			print("MethidInMethod");
+			println(to);
+		}
+	}
+	return methods;
+}
+
+Message mustInvoke(Entity e1, Entity e2, M3 m3) {
+	loc l1 = getEntityLocation(e1);
+	loc l2 = getEntityLocation(e2);
+	if(!isMethod(e2)) {
+		return  warning("<e2> is not a method", l2);
+	}
+	if(isMethod(e1)) {
+		if(l2 notin methodInvokesMethods(l1, m3)) {
+			return warning("<e1> does not invoke <e2> (mustInvoke)", l1);
+		}
+	} else {
+		if(l2 notin classInvokesMethods(l1, m3)) {
+			return warning("<e1> does not invoke <e2> (mustInvoke)", l1);
+		}
+	}
+	return warning("Rule accepted", l1);
+}
+
+
+// Start of general functions
 set[Message] eval(start[Dicto] dicto, M3 m3) = eval(dicto.top, m3);
 
 set[Message] eval((Dicto)`<Rule* rules>`, M3 m3) 
@@ -112,15 +200,18 @@ set[Message] eval(Rule rule, M3 m3) {
   set[Message] msgs = {};
   
   switch (rule) {
+  	case (Rule)`<Entity e1> must invoke <Entity e2>`: msgs += mustInvoke(e1, e2, m3);
+  	case (Rule)`<Entity e1> must depend <Entity e2>`: msgs += mustDepend(e1, e2, m3);
   	case (Rule)`<Entity e1> must inherit <Entity e2>`: msgs += mustInherit(e1, e2, m3);
-	}
+  	case (Rule)`<Entity e1> cannot inherit <Entity e2>`: msgs += cannotInherit(e1, e2, m3);
+  	case (Rule)`<Entity e1> can only inherit <Entity e2>`: msgs += canOnlyInherit(e1, e2, m3);
+  	}
   
   return msgs;
 }
 
-set[loc] q() {
+set[Message] q() {
 	M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
-	return findInherits(|java+class:///nl/tudelft/jpacman/npc/NPC|,m3); 
-	
+	return eval(parse(#start[Dicto], |project://sqat-analysis/src/sqat/series2/example.dicto|), m3);
 }
 

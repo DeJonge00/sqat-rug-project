@@ -1,2 +1,1 @@
-nl.tudelft.jpacman.npc.ghost must inherit nl.tudelft.jpacman.npc
-nl.tudelft.jpacman.ui cannot depend nl.tudelft.jpacman.npc
+nl.tudelft.jpacman.npc.ghost.Ghost::randomMove must invoke nl.tudelft.jpacman.board.Unit::getSquare

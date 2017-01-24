@@ -27,7 +27,7 @@ alias CC = rel[loc method, int cc];
 int complexity(Statement s) {
 	int c = 1;
 	visit(s) {
-		case x: \if(_,_): 
+		case \if(_,_): 
 			c+=1;
 		case \if(_,_,_): 
 			c+=1;
