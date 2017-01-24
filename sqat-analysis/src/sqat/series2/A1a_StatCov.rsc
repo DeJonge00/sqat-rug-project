@@ -1,6 +1,12 @@
 module sqat::series2::A1a_StatCov
 
 import lang::java::jdt::m3::Core;
+import IO;
+import List;
+import Tuple;
+import Set;
+import String;
+import util::Math;
 
 /*
 
@@ -45,5 +51,29 @@ Questions:
 */
 
 
-M3 jpacmanM3() = createM3FromEclipseProject(|project://jpacman|);
+M3 jpacmanM3() = createM3FromEclipseProject(|project://jpacman-framework|);
+
+alias method = tuple[loc name, loc src];
+alias graph = rel[method from, method to];
+
+set[method] getMethods(M3 model){
+	return toSet([m | method m <- model@declarations, isMethod(m.name)]);
+}
+
+set[method] getFunctionCalls(M3 model, method m){
+	set[method] methods = getMethods(model);
+	set[loc] names = model@methodInvocation[m.name];
+	return toSet([<name, getOneFrom(methods[name])> | name <- names, !isEmpty(methods[name])]);	
+}
+
+graph createGraph(M3 model) {
+	set[method] methods = getMethods(model);
+	return toSet([<m, c> | method m <- methods, c <- getFunctionCalls(model, m)]);
+}
+
+graph getTestCoverage() {
+	M3 model = jpacmanM3();
+	graph g = createGraph(model);
+	return g;
+}
 
