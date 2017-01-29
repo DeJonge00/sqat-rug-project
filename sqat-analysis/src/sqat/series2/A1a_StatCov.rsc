@@ -52,28 +52,76 @@ Questions:
 
 
 M3 jpacmanM3() = createM3FromEclipseProject(|project://jpacman-framework|);
+M3 covTestM3() = createM3FromEclipseProject(|project://sqat-test-project/statCov|);
 
 alias method = tuple[loc name, loc src];
-alias graph = rel[method from, method to];
+alias graph = rel[method nodeFrom, method nodeTo];
 
+/* Returns all methods in the model */
 set[method] getMethods(M3 model){
 	return toSet([m | method m <- model@declarations, isMethod(m.name)]);
 }
 
+/* Returns all methods that are tests */
+set[method] getTestMethods(M3 model) {
+	return toSet([m | method m <- model@declarations, contains(m.src.path, "/test/"), isMethod(m.name)]);
+}
+
+set[method] getTestableMethods(M3 model) {
+	return getMethods(model) - getTestMethods(model);
+}
+
+/* Returns the set of all methods that are called by method m */
 set[method] getFunctionCalls(M3 model, method m){
 	set[method] methods = getMethods(model);
 	set[loc] names = model@methodInvocation[m.name];
 	return toSet([<name, getOneFrom(methods[name])> | name <- names, !isEmpty(methods[name])]);	
 }
 
+/* Makes a graph, where and edge from node A to node B represents the fact that method A calls method B */
 graph createGraph(M3 model) {
 	set[method] methods = getMethods(model);
 	return toSet([<m, c> | method m <- methods, c <- getFunctionCalls(model, m)]);
 }
 
-graph getTestCoverage() {
-	M3 model = jpacmanM3();
+/* Returns the transitive closure of a graph */
+graph closure(g) {
+	return g+;
+}
+
+/* Finds all methods in a graph that are accessible */
+set[method] getTestedMethods(M3 model, graph g) {
+	g = closure(g);
+	set[method] tests = getTestMethods(model);
+	set[method] testables = getTestableMethods(model);
+	return toSet([t2 | t1 <- tests, t2 <- testables, <t1, t2> in g]);
+}
+
+/* Prints all relations in a graph for testing purposes */
+void printGraph(g) {
+	for(tuple[method nodeFrom,method nodeTo] t <- g) {
+		println("<t.nodeFrom.name> - <t.nodeTo.name>");
+	}
+}
+
+/* Prints all method names in a list of methods for testing purposes */
+void printMethodList(set[method] methods) {
+	for(method m <- methods) {
+		println(m.name);
+	}
+}
+
+/* Calculates the percentage of methods that is covered by tests */
+void getTestCoverage(M3 model) {
 	graph g = createGraph(model);
-	return g;
+	
+	set[method] testableMethods = getTestableMethods(model);
+	set[method] testMethods = getTestMethods(model);
+	set[method] testedMethods = getTestedMethods(model, g);
+	int coverage = 100 * size(testedMethods) / size(testableMethods);
+	
+	println("There are <size(testMethods)> test methods.");
+	println("There are <size(testableMethods)> normal methods, of which <size(testedMethods)> are covered by tests.");
+	println("That means the test coverage is <coverage>%");
 }
 
