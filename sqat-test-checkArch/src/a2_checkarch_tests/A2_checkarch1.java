@@ -1,6 +1,7 @@
 package a2_checkarch_tests;
 
-import java.awt.List;
+import 
+java.awt.List;
 
 public class A2_checkarch1 {
 	

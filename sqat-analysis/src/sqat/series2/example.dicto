@@ -1,1 +1,13 @@
-nl.tudelft.jpacman.npc.ghost.Ghost::randomMove must invoke nl.tudelft.jpacman.board.Unit::getSquare
+nl.tudelft.jpacman.npc.ghost.Ghost must inherit nl.tudelft.jpacman.npc.NPC
+nl.tudelft.jpacman.npc.ghost.Blinky must inherit nl.tudelft.jpacman.npc.ghost.Ghost
+nl.tudelft.jpacman.npc.ghost.Clyde can only inherit nl.tudelft.jpacman.npc.ghost.Ghost
+nl.tudelft.jpacman.npc.ghost.Blinky cannot inherit nl.tudelft.jpacman.npc.Inky
+
+nl.tudelft.jpacman.Launcher cannot instantiate nl.tudelft.jpacman.npc.NPC::NPC
+nl.tudelft.jpacman.game.GameFactory must instantiate nl.tudelft.jpacman.game.SinglePlayerGame::SinglePlayerGame
+nl.tudelft.jpacman.level.PlayerFactory can only instantiate nl.tudelft.jpacman.level.Player::Player
+
+nl.tudelft.jpacman.level.LevelFactory must invoke nl.tudelft.jpacman.npc.ghost.GhostFactory::createBlinky
+nl.tudelft.jpacman.level.LevelFactory cannot invoke nl.tudelft.jpacman.npc.ghost.Inky::Inky
+
+
