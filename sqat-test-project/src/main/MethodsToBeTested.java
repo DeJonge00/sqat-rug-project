@@ -15,4 +15,12 @@ public class MethodsToBeTested {
 	public static void method3() { //This method is not tested
 		method2();
 	}
+	
+	public static void method4() { //This method is tested
+		method4();
+	}
+	
+	public static void method5() { //This method is tested
+		method4();
+	}
 }
