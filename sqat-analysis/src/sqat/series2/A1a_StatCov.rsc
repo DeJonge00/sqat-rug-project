@@ -81,6 +81,10 @@ int getTestCoverage(M3 model) {
 	println("There are <size(testMethods)> test methods.");
 	println("There are <size(testableMethods)> normal methods, of which <size(testedMethods)> are covered by tests.");
 	println("That means the test coverage is <coverage>%");
+	println("\nThe methods that are not covered are:");
+	
+	println(methodNameList(testableMethods - testedMethods));
+	println();
 	
 	return coverage;
 }
@@ -114,16 +118,9 @@ list[str] methodNameList(set[method] methods) {
 lrel[str,str] graphNameList(graph g) {
 	rel[str,str] names = {};
 	for(tuple[method nodeFrom,method nodeTo] r <- g) {
-		print(getMethodName(r.nodeFrom));
-		println(getMethodName(r.nodeTo));
 		names += <getMethodName(r.nodeFrom), getMethodName(r.nodeTo)>;
 	}
 	return sort(names);
-}
-
-/* Compares results from our program to the SIG paper */
-void compareToSig() {
-	
 }
 
 /************************* TEST METHODS **********************************/
