@@ -6,6 +6,7 @@ import Message;
 import ParseTree;
 import IO;
 import String;
+import ToString;
 
 
 /*
@@ -55,15 +56,19 @@ Tip:
 
 Questions
 - how would you test your evaluator of Dicto rules? (sketch a design)
+	We will make an example project (sqat-test-project) with multiple classes. 
+	We will make tests of the form <class1> <dictorule> <class2>.
+	We won't need multiple packages, because those are not supported in the dicto grammar.
+	
 - come up with 3 rule types that are not currently supported by this version
   of Dicto (and explain why you'd need them). 
+  	For the "invoke" modality, we now check all methods with the same name. In order to 
+  	make a difference between multiple function with the same name, but other parameters, 
 */
 
 loc getEntityLocation(Entity e) {
-	println(e);
 	if(contains("<e>", "::")) {
-		str name = replaceAll(replaceAll("<e>", ".", "/"), "::", "/") + "()";
-		return |java+method:///| + name;
+		return |java+method:///| + replaceAll(replaceAll("<e>", ".", "/"), "::", "/");
 	}
 	return |java+class:///| + replaceAll("<e>", ".", "/");
 }
@@ -75,7 +80,7 @@ bool isMethod(Entity e) {
 // 	Class depends on class
 set[loc] findDependancies(loc file, M3 m3) {
 	set[loc] foundDependancies = {};
-	//println(file);
+	println(file);
 	for(<loc src, loc name> <- m3@uses) {
 		if(src == file) {
 			foundDependancies += name;
@@ -112,34 +117,31 @@ set[loc] findInherits(loc file, m3) {
 	return foundInherits;
 }
 
-Message mustInherit(Entity e1, str modality, Entity e2, M3 m3) {
-	Message warnings = {};
+Message mustInherit(Entity e1, Entity e2, M3 m3) {
 	loc file = getEntityLocation(e1);
 	if(getEntityLocation(e2) notin findInherits(file, m3)) {
 		return warning("<e1> does not inherit from <e2> (must inherit)", file);
 	}
-	return warnings;
+	return warning("Rule accepted", file);
 }
 
 Message cannotInherit(Entity e1, Entity e2, M3 m3) {
-	Message warnings = {};
-	
 	loc file = getEntityLocation(e1);
-	if(getEntityLocation(e2) notin findInherits(file, m3)) {
-		warnings += warning("<e1> inherits from <e2> (cannot inherit)", file);
+	if(getEntityLocation(e2) in findInherits(file, m3)) {
+		return warning("<e1> inherits from <e2> (cannot inherit)", file);
 	}
-	return warnings;
+	return warning("Rule accepted", file);
 }
 
 Message canOnlyInherit(Entity e1, Entity e2, M3 m3) {
-	Message warnings = {};
 	getEntityLocation(e1);
+	loc file = getEntityLocation(e1);
 	for(loc l <- findInherits(file, m3)) {
 		if(getEntityLocation(e2) != l) {
 			return warning("<e1> inherits from something other than <e2> (can only inherit)", file);
 		}
 	}
-	return warnings;
+	return warning("Rule accepted", file);
 }
 
 // Class/method invokes method
@@ -149,8 +151,6 @@ set[loc] classInvokesMethods(loc class, M3 m3) {
 	for(<loc name, loc src> <- m3@declarations) {
 		if(src == class) {
 			methodsInClass += name;
-			print("MethodInClass: ");
-			println(to);
 		}
 	}
 	for(loc method <- methodsInClass) {
@@ -162,10 +162,8 @@ set[loc] classInvokesMethods(loc class, M3 m3) {
 set[loc] methodInvokesMethods(loc method, M3 m3) {
 	set[loc] methods = {};
 	for(<loc from, loc to> <- m3@methodInvocation) {
-		if(from == method) {
+		if((split("///", split("(", toString(from))[0])[-1]) == (split("|", split("///", "<method>")[-1])[0])) {
 			methods += to;
-			print("MethidInMethod");
-			println(to);
 		}
 	}
 	return methods;
@@ -178,12 +176,60 @@ Message mustInvoke(Entity e1, Entity e2, M3 m3) {
 		return  warning("<e2> is not a method", l2);
 	}
 	if(isMethod(e1)) {
-		if(l2 notin methodInvokesMethods(l1, m3)) {
-			return warning("<e1> does not invoke <e2> (mustInvoke)", l1);
+		for(loc l <- methodInvokesMethods(l1, m3)) {
+			if((split("///", split("|", toString(l2))[1])[-1]) == (split("///", split("(", toString(l))[0])[-1])) {
+				return warning("Rule accepted", l);
+			}
 		}
-	} else {
-		if(l2 notin classInvokesMethods(l1, m3)) {
-			return warning("<e1> does not invoke <e2> (mustInvoke)", l1);
+		return warning("<e1> does not invoke <e2> (mustInvoke)", l1);
+	} 
+	for(loc l <- classInvokesMethods(l1, m3)) {
+		if((split("///", split("|", toString(l2))[1])[-1]) == (split("///", split("(", toString(l))[0])[-1])) {
+			return warning("Rule accepted", l);
+		}
+	}
+	return warning("<e1> does not invoke <e2> (mustInvoke)", l1);
+}
+
+Message cannotInvoke(Entity e1, Entity e2, M3 m3) {
+	loc l1 = getEntityLocation(e1);
+	loc l2 = getEntityLocation(e2);
+	if(!isMethod(e2)) {
+		return  warning("<e2> is not a method", l2);
+	}
+	if(isMethod(e1)) {
+		for(loc l <- methodInvokesMethods(l1, m3)) {
+			if((split("///", split("|", toString(l2))[1])[-1]) == (split("///", split("(", toString(l))[0])[-1])) {
+				return warning("<e1> invokes <e2> (cannotInvoke)", l);
+			}
+		}
+		return warning("Rule accepted", l1);
+	} 
+	for(loc l <- classInvokesMethods(l1, m3)) {
+		if((split("///", split("|", toString(l2))[1])[-1]) == (split("///", split("(", toString(l))[0])[-1])) {
+			return warning("<e1> invokes <e2> (cannotInvoke)", l);
+		}
+	}
+	return warning("Rule accepted", l1);
+}
+
+Message canOnlyInvoke(Entity e1, Entity e2, M3 m3) {
+	loc l1 = getEntityLocation(e1);
+	loc l2 = getEntityLocation(e2);
+	if(!isMethod(e2)) {
+		return  warning("<e2> is not a method", l2);
+	}
+	if(isMethod(e1)) {
+		for(loc l <- methodInvokesMethods(l1, m3)) {
+			if((split("///", split("|", toString(l2))[1])[-1]) != (split("///", split("(", toString(l))[0])[-1])) {
+				return warning("<e1> invokes <e2> (canOnlyInvoke)", l);
+			}
+		}
+		return warning("Rule accepted", l1);
+	} 
+	for(loc l <- classInvokesMethods(l1, m3)) {
+		if((split("///", split("|", toString(l2))[1])[-1]) != (split("///", split("(", toString(l))[0])[-1])) {
+			return warning("<e1> invokes <e2> (canOnlyInvoke)", l);
 		}
 	}
 	return warning("Rule accepted", l1);
@@ -201,6 +247,8 @@ set[Message] eval(Rule rule, M3 m3) {
   
   switch (rule) {
   	case (Rule)`<Entity e1> must invoke <Entity e2>`: msgs += mustInvoke(e1, e2, m3);
+  	case (Rule)`<Entity e1> cannot invoke <Entity e2>`: msgs += cannotInvoke(e1, e2, m3);
+  	case (Rule)`<Entity e1> can only invoke <Entity e2>`: msgs += canOnlyInvoke(e1, e2, m3);
   	case (Rule)`<Entity e1> must depend <Entity e2>`: msgs += mustDepend(e1, e2, m3);
   	case (Rule)`<Entity e1> must inherit <Entity e2>`: msgs += mustInherit(e1, e2, m3);
   	case (Rule)`<Entity e1> cannot inherit <Entity e2>`: msgs += cannotInherit(e1, e2, m3);
@@ -214,4 +262,35 @@ set[Message] q() {
 	M3 m3 = createM3FromEclipseProject(|project://jpacman-framework|);
 	return eval(parse(#start[Dicto], |project://sqat-analysis/src/sqat/series2/example.dicto|), m3);
 }
+
+
+set[Message] test1() {
+	return eval((Rule)`a2_checkarch_tests.A2_checkarch2 cannot inherit a2_checkarch_tests.A2_checkarch1`, testM3());
+}
+// Tests
+
+M3 testM3() = createM3FromEclipseProject(|project://sqat-test-project/src|);
+//testing invoke
+test bool mustInvoke_Invokes() = eval((Rule)`a2_checkarch_tests.A2_checkarch2::method must invoke a2_checkarch_tests.A2_checkarch1::method`, testM3())
+	== {warning("Rule accepted", |java+method:///a2_checkarch_tests/A2_checkarch1/method()|)};
+test bool mustInvoke_DoesntInvoke() = eval((Rule)`a2_checkarch_tests.A2_checkarch2::method must invoke a2_checkarch_tests.A2_checkarch1::method2`, testM3())
+	== {warning("a2_checkarch_tests.A2_checkarch2::method does not invoke a2_checkarch_tests.A2_checkarch1::method2 (mustInvoke)", |java+method:///a2_checkarch_tests/A2_checkarch2/method|)};
+test bool cannotInvoke_DoesntInvoke() = eval((Rule)`a2_checkarch_tests.A2_checkarch2::method cannot invoke a2_checkarch_tests.A2_checkarch1::method2`, testM3())
+	== {warning("Rule accepted", |java+method:///a2_checkarch_tests/A2_checkarch2/method|)};
+test bool cannotInvoke_Invokes() = eval((Rule)`a2_checkarch_tests.A2_checkarch2::method cannot invoke a2_checkarch_tests.A2_checkarch1::method`, testM3())
+	== {warning("a2_checkarch_tests.A2_checkarch2::method invokes a2_checkarch_tests.A2_checkarch1::method (cannotInvoke)", |java+method:///a2_checkarch_tests/A2_checkarch1/method()|)};
+//testing inherit
+test bool mustInherit_Inherits() = eval((Rule)`a2_checkarch_tests.A2_checkarch2 must inherit a2_checkarch_tests.A2_checkarch1`, testM3())
+	== {warning("Rule accepted", |java+class:///a2_checkarch_tests/A2_checkarch2|)};
+test bool mustInherit_DoesntInherit() = eval((Rule)`a2_checkarch_tests.A2_checkarch1 must inherit a2_checkarch_tests.A2_checkarch2`, testM3())
+	== {warning("a2_checkarch_tests.A2_checkarch1 does not inherit from a2_checkarch_tests.A2_checkarch2 (must inherit)", |java+class:///a2_checkarch_tests/A2_checkarch1|)};
+test bool cannotInherit_DoesntInherit() = eval((Rule)`a2_checkarch_tests.A2_checkarch1 cannot inherit a2_checkarch_tests.A2_checkarch2`, testM3())
+	== {warning("Rule accepted", |java+class:///a2_checkarch_tests/A2_checkarch1|)};
+test bool cannotInherit_Inherits() = eval((Rule)`a2_checkarch_tests.A2_checkarch2 cannot inherit a2_checkarch_tests.A2_checkarch1`, testM3())
+	== {warning("a2_checkarch_tests.A2_checkarch2 inherits from a2_checkarch_tests.A2_checkarch1 (cannot inherit)", |java+class:///a2_checkarch_tests/A2_checkarch2|)};
+test bool canOnlyInherit_OnlyInherits() = eval((Rule)`a2_checkarch_tests.A2_checkarch2 can only inherit a2_checkarch_tests.A2_checkarch1`, testM3())
+	== {warning("Rule accepted", |java+class:///a2_checkarch_tests/A2_checkarch2|)};
+test bool canOnlyInherit_DoesntInherit() = eval((Rule)`a2_checkarch_tests.A2_checkarch1 can only inherit a2_checkarch_tests.A2_checkarch2`, testM3())
+	== {warning("Rule accepted", |java+class:///a2_checkarch_tests/A2_checkarch1|)};
+
 
