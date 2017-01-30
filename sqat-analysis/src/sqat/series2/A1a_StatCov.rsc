@@ -69,6 +69,22 @@ set[method] getTestedMethods(M3 model, graph g) {
 	return toSet([t2 | t1 <- tests, t2 <- testables, <t1, t2> in g]);
 }
 
+/* Calculates the percentage of methods that is covered by tests. */
+void getTestCoverage(M3 model) {
+	graph g = createGraph(model);
+	
+	set[method] testableMethods = getTestableMethods(model);
+	set[method] testMethods = getTestMethods(model);
+	set[method] testedMethods = getTestedMethods(model, g);
+	int coverage = 100 * size(testedMethods) / size(testableMethods);
+	
+	println("There are <size(testMethods)> test methods.");
+	println("There are <size(testableMethods)> normal methods, of which <size(testedMethods)> are covered by tests.");
+	println("That means the test coverage is <coverage>%");
+}
+
+/******************* METHODS FOR PRINTING DATA ***************************/
+
 /* Prints all relations in a graph for testing purposes. */
 void printGraph(g) {
 	for(tuple[method nodeFrom,method nodeTo] t <- g) {
@@ -87,25 +103,10 @@ list[str] methodNameList(set[method] methods) {
 	return sort(names);
 }
 
-/* Calculates the percentage of methods that is covered by tests. */
-void getTestCoverage(M3 model) {
-	graph g = createGraph(model);
+/* Compares results from our program to the SIG paper */
+void compareToSig() {
 	
-	set[method] testableMethods = getTestableMethods(model);
-	set[method] testMethods = getTestMethods(model);
-	set[method] testedMethods = getTestedMethods(model, g);
-	int coverage = 100 * size(testedMethods) / size(testableMethods);
-	
-	println("There are <size(testMethods)> test methods.");
-	println("There are <size(testableMethods)> normal methods, of which <size(testedMethods)> are covered by tests.");
-	println("That means the test coverage is <coverage>%");
 }
-
-set[method] teste() {
-	 method a = <|java+method:///test/TestMethods/test3()|,|file:///home/jannick/git/sqat-rug-project/sqat-test-project/src/test/TestMethods.java|(201,62,<13,1>,<15,2>)>;
-	 return getFunctionCalls(covTestM3(),a);
-}
-
 
 /************************* TEST METHODS **********************************/
 
