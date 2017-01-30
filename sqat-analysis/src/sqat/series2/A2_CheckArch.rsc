@@ -7,8 +7,6 @@ import ParseTree;
 import IO;
 import String;
 
-
-
 /*
 
 This assignment has two parts:
@@ -82,14 +80,15 @@ Questions
   	(This is slow and may cause errors if not checked regularly.)
 */
 
-loc getEntityLocation(Entity e) {
+loc getEntityLocation(Entity e) { // Entity -> loc 
 	if(contains("<e>", "::")) {
 		return |java+method:///| + replaceAll(replaceAll("<e>", ".", "/"), "::", "/");
 	}
+	// Not a method = a class (dicto grammar)
 	return |java+class:///| + replaceAll("<e>", ".", "/");
 }
 
-loc getConstructorLocation(Entity e) {
+loc getConstructorLocation(Entity e) { // Entity -> loc
 	return |java+constructor:///| + replaceAll(replaceAll("<e>", ".", "/"), "::", "/");
 }
 
@@ -156,7 +155,8 @@ Message canOnlyInherit(Entity e1, Entity e2, M3 m3) {
 }
 
 // Class/method invokes method
-set[loc] classInvokesMethods(loc class, M3 m3) {
+// Input: class Output: set of methods invoked in that class
+set[loc] classInvokesMethods(loc class, M3 m3) { 
 	set[loc] methodsInvoked = {};
 	set[loc] methodsInClass = {};
 	for(<loc name, loc src> <- m3@declarations) {
@@ -170,6 +170,7 @@ set[loc] classInvokesMethods(loc class, M3 m3) {
 	return methodsInvoked;
 }
 
+// Input: method, Output: set of methods invoked in that method
 set[loc] methodInvokesMethods(loc method, M3 m3) {
 	set[loc] methods = {};
 	for(<loc from, loc to> <- m3@methodInvocation) {
@@ -294,6 +295,7 @@ Message canOnlyInstantiate(Entity e1, Entity e2, M3 m3) {
 		methods = classInvokesMethods(l1, m3);
 	}
 	for(loc l <- methods) {
+		// Extra check 'Is l a consructor?' needed
 		if(split(":///", l.uri)[0] == "java+constructor" && l2.uri != split("(", l.uri)[0]) {
 			return warning("<e1> instantiates more than only <e2> (canOnlyInstantiate)", l1);
 		}
@@ -310,6 +312,7 @@ set[Message] eval((Dicto)`<Rule* rules>`, M3 m3)
 set[Message] eval(Rule rule, M3 m3) {
   set[Message] msgs = {};
   
+  // Switch methods depending on the Dicto-rule
   switch (rule) {
   	case (Rule)`<Entity e1> must invoke <Entity e2>`: msgs += mustInvoke(e1, e2, m3);
   	case (Rule)`<Entity e1> cannot invoke <Entity e2>`: msgs += cannotInvoke(e1, e2, m3);
@@ -324,6 +327,8 @@ set[Message] eval(Rule rule, M3 m3) {
   
   return msgs;
 }
+
+// Main method for evaluating jpacman with the example.dicto
 M3 jpacmanM3() = createM3FromEclipseProject(|project://jpacman-framework/src|);
 
 set[Message] q() {
