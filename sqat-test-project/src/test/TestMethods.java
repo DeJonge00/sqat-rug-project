@@ -11,7 +11,6 @@ public class TestMethods {
 	}
 	
 	public static void test3() {
-		MethodsToBeTested.method4();
-		MethodsToBeTested.method5();
+		MethodsToBeTested.method4(MethodsToBeTested.method5());
 	}
 }

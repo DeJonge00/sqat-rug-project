@@ -70,7 +70,7 @@ set[method] getTestedMethods(M3 model, graph g) {
 }
 
 /* Calculates the percentage of methods that is covered by tests. */
-void getTestCoverage(M3 model) {
+int getTestCoverage(M3 model) {
 	graph g = createGraph(model);
 	
 	set[method] testableMethods = getTestableMethods(model);
@@ -81,6 +81,8 @@ void getTestCoverage(M3 model) {
 	println("There are <size(testMethods)> test methods.");
 	println("There are <size(testableMethods)> normal methods, of which <size(testedMethods)> are covered by tests.");
 	println("That means the test coverage is <coverage>%");
+	
+	return coverage;
 }
 
 /******************* METHODS FOR PRINTING DATA ***************************/
@@ -92,13 +94,29 @@ void printGraph(g) {
 	}
 }
 
+/* Takes a method and returns its name for testing purposes. */
+str getMethodName(method m) {
+	str name = m.name.uri;
+	name = last(split("/",name));
+	return head(split("(",name));
+}
+
 /* Returns a set of the names of methods for testing purposes. */
 list[str] methodNameList(set[method] methods) {
 	set[str] names = {};
-	str name;
 	for(method m <- methods) {
-		name = m.name.uri;
-		names += last(split("/",name));
+		names += getMethodName(m);
+	}
+	return sort(names);
+}
+
+/* Takes a graph of methods and returns a graph of names for testing purposes. */
+lrel[str,str] graphNameList(graph g) {
+	rel[str,str] names = {};
+	for(tuple[method nodeFrom,method nodeTo] r <- g) {
+		print(getMethodName(r.nodeFrom));
+		println(getMethodName(r.nodeTo));
+		names += <getMethodName(r.nodeFrom), getMethodName(r.nodeTo)>;
 	}
 	return sort(names);
 }
@@ -110,23 +128,50 @@ void compareToSig() {
 
 /************************* TEST METHODS **********************************/
 
-/* */
 test bool testGetMethods()
 	= methodNameList(getMethods(covTestM3())) == 
-	["main()","method1()","method2()","method3()","method4()","method5()","test1()","test2()","test3()"];
-	
-/* */
+	["main","method1","method2","method3","method4","method5","test1","test2","test3"];
+
 test bool testGetTestMethods()
 	= methodNameList(getTestMethods(covTestM3())) == 
-	["test1()","test2()","test3()"];
+	["test1","test2","test3"];
 	
-/* */
 test bool testGetTestableMethods()
 	= methodNameList(getTestableMethods(covTestM3())) == 
-	["main()","method1()","method2()","method3()","method4()","method5()"];
+	["main","method1","method2","method3","method4","method5"];
 	
 test bool testGetFunctionCalls() {
 	 method test3 = <|java+method:///test/TestMethods/test3()|,|file:///home/jannick/git/sqat-rug-project/sqat-test-project/src/test/TestMethods.java|(201,62,<13,1>,<15,2>)>;
 	 return methodNameList(getFunctionCalls(covTestM3(),test3)) == 
-	 ["method4()","method5()"];
+	 ["method4","method5"];
 }
+
+test bool testCreateGraph() 
+	= graphNameList(createGraph(covTestM3())) == [
+	  <"method1","method2">,
+	  <"method3","method2">,
+	  <"method4","method4">,
+	  <"method5","method4">,
+	  <"test1","method1">,
+	  <"test3","method4">,
+	  <"test3","method5">
+	];
+	
+test bool testClosure() 
+	= graphNameList(closure(createGraph(covTestM3()))) == [
+	  <"method1","method2">,
+	  <"method3","method2">,
+	  <"method4","method4">,
+	  <"method5","method4">,
+	  <"test1","method1">,
+	  <"test1","method2">,
+	  <"test3","method4">,
+	  <"test3","method5">
+	];
+	
+test bool testGetTestedMethods() 
+	= methodNameList(getTestedMethods(covTestM3(), createGraph(covTestM3()))) == 
+	["method1","method2","method4","method5"];
+
+test bool testGetTestCoverage() 
+	= getTestCoverage(covTestM3()) == 66;
