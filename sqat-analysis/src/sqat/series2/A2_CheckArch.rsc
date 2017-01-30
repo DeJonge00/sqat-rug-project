@@ -62,7 +62,10 @@ Questions
 	
 - come up with 3 rule types that are not currently supported by this version
   of Dicto (and explain why you'd need them). 
-  	For the "invoke" modality, we now check all methods with the same name. In order to 
+  	1. Since Dicto has no grammar for packages, we cannot see how packages interact with eachother, 
+  	without looking at all included classes and methods. Including packages in the grammar would save
+    time and mistakes if you would want packages checked.
+  	2. For the "invoke" modality, we now check all methods with the same name. In order to 
   	make a difference between multiple function with the same name, but other parameters, 
 */
 
@@ -313,7 +316,7 @@ set[Message] q() {
 	return  eval((Rule)`a2_checkarch_tests.A2_checkarch1 must instantiate a2_checkarch_tests.A2_checkarch2::A2_checkarch2`, testM3());
 }
 rel[loc,loc] q2() {
-	return createM3FromEclipseProject(|project://sqat-test-project/src|)@uses;
+	return createM3FromEclipseProject(|project://sqat-test-checkArch/src|)@uses;
 }
 
 // Tests
